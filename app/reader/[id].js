@@ -7,7 +7,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useSettings, useTheme } from '../../src/store/SettingsContext';
 import { usePlayer } from '../../src/store/PlayerContext';
 import { getSurah, getSurahAyahs } from '../../src/lib/quran';
-import { getTafsirForSurah, TAFSIR_OPTIONS } from '../../src/lib/tafsir';
+import { getTafsirForSurah, getTafsirOption } from '../../src/lib/tafsir';
 import { toArabicDigits } from '../../src/lib/format';
 import MiniPlayer from '../../src/components/MiniPlayer';
 
@@ -28,7 +28,8 @@ export default function Reader() {
     () => (showTafsir ? getTafsirForSurah(tafsirId, surahNumber) : {}),
     [showTafsir, tafsirId, surahNumber]
   );
-  const tafsirName = TAFSIR_OPTIONS.find((t) => t.id === tafsirId)?.name || '';
+  const tafsirOpt = getTafsirOption(tafsirId);
+  const tafsirName = tafsirOpt.name;
 
   // Cumulative "position fraction" per ayah, weighted by verse length — used to
   // estimate which ayah is being recited while the whole-surah audio plays.
@@ -115,6 +116,7 @@ export default function Reader() {
                 active={activeAyah === a.ayah}
                 tafsir={tafsirMap[a.ayah]}
                 tafsirName={tafsirName}
+                tafsirDir={tafsirOpt.dir}
                 bookmarked={isBookmarked(surahNumber, a.ayah)}
                 onBookmark={() => toggleBookmark(surahNumber, a.ayah)}
                 onPlay={listen}
@@ -138,7 +140,8 @@ export default function Reader() {
   );
 }
 
-function AyahCard({ c, ayah, active, tafsir, tafsirName, bookmarked, onBookmark, onPlay }) {
+function AyahCard({ c, ayah, active, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
+  const isLtr = tafsirDir === 'ltr';
   return (
     <View
       style={[
@@ -165,8 +168,15 @@ function AyahCard({ c, ayah, active, tafsir, tafsirName, bookmarked, onBookmark,
       <Text style={[styles.arLine, { color: c.ink }]}>{ayah.text}</Text>
       {tafsir ? (
         <View style={[styles.tafBox, { borderTopColor: c.line }]}>
-          <Text style={{ color: c.accent, fontWeight: '700', fontSize: 11, marginBottom: 4, textAlign: 'right' }}>{tafsirName}</Text>
-          <Text style={[styles.tafText, { color: c.muted }]}>{tafsir}</Text>
+          <Text style={{ color: c.accent, fontWeight: '700', fontSize: 11, marginBottom: 4, textAlign: isLtr ? 'left' : 'right' }}>{tafsirName}</Text>
+          <Text
+            style={[
+              styles.tafText,
+              { color: c.muted, textAlign: isLtr ? 'left' : 'right', writingDirection: isLtr ? 'ltr' : 'rtl' },
+            ]}
+          >
+            {tafsir}
+          </Text>
         </View>
       ) : null}
     </View>

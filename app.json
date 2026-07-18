@@ -50,7 +50,8 @@
           "locationWhenInUsePermission": "شوێن بۆ دیاریکردنی کاتی نوێژ و ئاراستەی قیبلە بەکاردەهێنرێت."
         }
       ],
-      "expo-sensors"
+      "expo-sensors",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": false

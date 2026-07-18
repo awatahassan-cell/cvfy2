@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSettings, useTheme } from '../src/store/SettingsContext';
 import { THEME_LIST } from '../src/theme/themes';
-import { TAFSIR_OPTIONS } from '../src/lib/tafsir';
+import { TAFSIR_OPTIONS, TAFSIR_LANGS } from '../src/lib/tafsir';
 import { RECITERS } from '../src/lib/reciters';
 import { CALC_METHODS } from '../src/lib/prayer';
 
@@ -59,14 +59,27 @@ export default function Settings() {
         </View>
       </Section>
 
-      {/* Tafsir selection */}
-      <Section c={c} label="تەفسیر">
-        <Segmented
-          c={c}
-          value={tafsirId}
-          options={TAFSIR_OPTIONS.map((t) => ({ id: t.id, label: t.name }))}
-          onChange={(v) => update({ tafsirId: v })}
-        />
+      {/* Tafsir selection — grouped by language */}
+      <Section c={c} label="تەفسیر (کوردی · عەرەبی · ئینگلیزی)">
+        {TAFSIR_LANGS.map((lang) => (
+          <View key={lang.id} style={{ marginBottom: 12 }}>
+            <Text style={{ color: c.muted, fontSize: 11, marginBottom: 6, textAlign: 'right' }}>{lang.label}</Text>
+            <View style={styles.chipWrap}>
+              {TAFSIR_OPTIONS.filter((t) => t.lang === lang.id).map((t) => {
+                const sel = t.id === tafsirId;
+                return (
+                  <Pressable
+                    key={t.id}
+                    onPress={() => update({ tafsirId: t.id })}
+                    style={[styles.chip, { backgroundColor: sel ? c.accent : c.card, borderColor: sel ? c.accent : c.line }]}
+                  >
+                    <Text style={{ color: sel ? c.onAccent : c.ink, fontSize: 13, fontWeight: sel ? '700' : '500' }}>{t.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ))}
         <ToggleRow
           c={c}
           label="پیشاندانی تەفسیر لەژێر ئایەت"
@@ -170,6 +183,8 @@ const styles = StyleSheet.create({
   themeChip: { alignItems: 'center', width: 56 },
   swatch: { width: 46, height: 46, borderRadius: 14, flexDirection: 'row', overflow: 'hidden', borderWidth: 2 },
   seg: { flexDirection: 'row-reverse', borderRadius: 14, borderWidth: 1, padding: 4, gap: 4, flexWrap: 'wrap' },
+  chipWrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 100, borderWidth: 1 },
   segBtn: { flexGrow: 1, paddingVertical: 9, paddingHorizontal: 8, borderRadius: 10, alignItems: 'center' },
   listRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
   toggleRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },

@@ -13,6 +13,7 @@ const defaults = {
   language: 'ku', // 'ku' | 'ar' | 'en'
   calcMethod: 'MuslimWorldLeague',
   madhab: 'shafi', // 'shafi' | 'hanafi'
+  notifyPrayer: false,
   bookmarks: [], // [{ surah, ayah }]
   lastRead: { surah: 1, ayah: 1 },
 };
@@ -75,7 +76,9 @@ export function SettingsProvider({ children }) {
     [state, ready, theme, update, persist, toggleBookmark, isBookmarked, setLastRead]
   );
 
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+  // Don't mount screens until persisted settings are loaded, otherwise an
+  // early write (e.g. reader saving "last read") would clobber saved settings.
+  return <SettingsContext.Provider value={value}>{ready ? children : null}</SettingsContext.Provider>;
 }
 
 export function useSettings() {
