@@ -8,6 +8,7 @@ import { THEME_LIST } from '../src/theme/themes';
 import { TAFSIR_OPTIONS, TAFSIR_LANGS } from '../src/lib/tafsir';
 import { RECITERS } from '../src/lib/reciters';
 import { CALC_METHODS } from '../src/lib/prayer';
+import { FONT_OPTIONS } from '../src/lib/uiFont';
 
 const LANGS = [
   { id: 'ku', label: 'کوردی' },
@@ -19,7 +20,7 @@ export default function Settings() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { themeId, readMode, tafsirId, showTafsir, reciterId, language, calcMethod, madhab, update } = useSettings();
+  const { themeId, readMode, tafsirId, showTafsir, reciterId, language, calcMethod, madhab, fontId, update } = useSettings();
 
   return (
     <ScrollView
@@ -53,6 +54,27 @@ export default function Settings() {
                   <View style={{ flex: 1, backgroundColor: t.swatch[1] }} />
                 </View>
                 <Text style={{ color: sel ? c.accent : c.muted, fontSize: 11, marginTop: 5 }}>{t.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Section>
+
+      {/* UI font */}
+      <Section c={c} label="فۆنتی نووسین">
+        <View style={styles.chipWrap}>
+          {FONT_OPTIONS.map((f) => {
+            const sel = f.id === fontId;
+            return (
+              <Pressable
+                key={f.id}
+                onPress={() => update({ fontId: f.id })}
+                style={[styles.fontChip, { backgroundColor: sel ? c.accent : c.card, borderColor: sel ? c.accent : c.line }]}
+              >
+                <Text style={{ color: sel ? c.onAccent : c.ink, fontSize: 18, fontFamily: f.family || undefined }}>
+                  {f.preview}
+                </Text>
+                <Text style={{ color: sel ? c.onAccent : c.muted, fontSize: 11, marginTop: 3 }}>{f.label}</Text>
               </Pressable>
             );
           })}
@@ -185,6 +207,7 @@ const styles = StyleSheet.create({
   seg: { flexDirection: 'row-reverse', borderRadius: 14, borderWidth: 1, padding: 4, gap: 4, flexWrap: 'wrap' },
   chipWrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 100, borderWidth: 1 },
+  fontChip: { alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, borderWidth: 1, minWidth: 74 },
   segBtn: { flexGrow: 1, paddingVertical: 9, paddingHorizontal: 8, borderRadius: 10, alignItems: 'center' },
   listRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
   toggleRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },

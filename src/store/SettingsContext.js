@@ -11,6 +11,7 @@ const defaults = {
   showTafsir: true,
   reciterId: 'peshawa',
   language: 'ku', // 'ku' | 'ar' | 'en'
+  fontId: 'system',
   calcMethod: 'MuslimWorldLeague',
   madhab: 'shafi', // 'shafi' | 'hanafi'
   notifyPrayer: false,

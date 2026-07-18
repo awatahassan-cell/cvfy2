@@ -9,6 +9,7 @@ import { usePlayer } from '../../src/store/PlayerContext';
 import { getSurahs, getSurah } from '../../src/lib/quran';
 import { RECITERS } from '../../src/lib/reciters';
 import { toArabicDigits } from '../../src/lib/format';
+import { formatHijri } from '../../src/lib/hijri';
 
 const SURAHS = getSurahs();
 const TABS = ['سوورە', 'جوزء', 'حزب', 'پەڕە'];
@@ -26,7 +27,10 @@ export default function Home() {
   const Header = (
     <View>
       <View style={styles.head}>
-        <Text style={[styles.h1, { color: c.ink }]}>سەرەکی</Text>
+        <View>
+          <Text style={[styles.h1, { color: c.ink }]}>سەرەکی</Text>
+          <Text style={{ color: c.muted, fontSize: 12, marginTop: 2 }}>{formatHijri(new Date())}</Text>
+        </View>
         <View style={[styles.pill, { backgroundColor: c.accent }]}>
           <Text style={{ color: c.onAccent, fontSize: 12, fontWeight: '700' }}>بەشداری</Text>
         </View>
@@ -155,11 +159,11 @@ const styles = StyleSheet.create({
   pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100 },
   reciters: { flexDirection: 'row-reverse', gap: 16, paddingHorizontal: 20, paddingVertical: 14 },
   rec: { alignItems: 'center', width: 62 },
-  av: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginBottom: 5 },
+  av: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginBottom: 5, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   recName: { fontSize: 10, textAlign: 'center' },
   actions: { flexDirection: 'row-reverse', gap: 11, paddingHorizontal: 20, marginBottom: 12 },
-  act: { flex: 1, borderRadius: 18, borderWidth: 1, paddingVertical: 12, alignItems: 'center' },
-  lastCard: { marginHorizontal: 20, borderRadius: 20, borderWidth: 1, padding: 16, marginBottom: 14 },
+  act: { flex: 1, borderRadius: 18, borderWidth: 1, paddingVertical: 12, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  lastCard: { marginHorizontal: 20, borderRadius: 20, borderWidth: 1, padding: 16, marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
   lastRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, marginTop: 12 },
   bar: { flex: 1, height: 5, borderRadius: 10, overflow: 'hidden' },
   playPill: { flexDirection: 'row-reverse', alignItems: 'center', gap: 5, paddingHorizontal: 15, paddingVertical: 7, borderRadius: 100 },

@@ -6,15 +6,20 @@ import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
-import { SettingsProvider, useTheme } from '../src/store/SettingsContext';
+import { SettingsProvider, useTheme, useSettings } from '../src/store/SettingsContext';
 import { PlayerProvider } from '../src/store/PlayerContext';
+import { installUIFontPatch, setUIFontFamily, familyForFont } from '../src/lib/uiFont';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+installUIFontPatch();
 
 function ThemedStack() {
   const theme = useTheme();
+  const { fontId } = useSettings();
+  // Apply the chosen UI font, then remount the tree so every Text re-renders with it.
+  setUIFontFamily(familyForFont(fontId));
   return (
-    <>
+    <React.Fragment key={fontId}>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -27,13 +32,18 @@ function ThemedStack() {
         <Stack.Screen name="reader/[id]" />
         <Stack.Screen name="player" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
-    </>
+    </React.Fragment>
   );
 }
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     UthmanicHafs: require('../assets/fonts/UthmanicHafs.otf'),
+    NotoNaskhArabic: require('../assets/fonts/NotoNaskhArabic.ttf'),
+    NotoKufiArabic: require('../assets/fonts/NotoKufiArabic.ttf'),
+    Vazirmatn: require('../assets/fonts/Vazirmatn.ttf'),
+    Cairo: require('../assets/fonts/Cairo.ttf'),
+    Lalezar: require('../assets/fonts/Lalezar.ttf'),
   });
 
   useEffect(() => {
