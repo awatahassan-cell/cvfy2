@@ -32,13 +32,27 @@ export function getJuzAyahs(juz) {
   return AYAHS.filter((a) => a.juz === juz);
 }
 
+// Normalize Arabic for search: drop harakat/quranic marks/tatweel and unify
+// alef, alef-maksura and ta-marbuta so plain typing matches Uthmani text.
+export function normalizeArabic(s) {
+  return (s || '')
+    .replace(/[ً-ْٰـٓ-ٕۖ-ࣰۭ-ࣿ]/g, '')
+    .replace(/[آأإٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .trim();
+}
+
+// Precomputed normalized text for fast, diacritic-insensitive search.
+const NORM_TEXT = AYAHS.map((a) => normalizeArabic(a.text));
+
 export function searchQuran(query, limit = 50) {
-  const q = (query || '').trim();
+  const q = normalizeArabic((query || '').trim());
   if (!q) return [];
   const out = [];
-  for (const a of AYAHS) {
-    if (a.text.includes(q)) {
-      out.push(a);
+  for (let i = 0; i < AYAHS.length; i++) {
+    if (NORM_TEXT[i].includes(q)) {
+      out.push(AYAHS[i]);
       if (out.length >= limit) break;
     }
   }
