@@ -44,6 +44,9 @@ export default function RootLayout() {
     Vazirmatn: require('../assets/fonts/Vazirmatn.ttf'),
     Cairo: require('../assets/fonts/Cairo.ttf'),
     Lalezar: require('../assets/fonts/Lalezar.ttf'),
+    SarkarKosary: require('../assets/fonts/SarkarKosary.ttf'),
+    SarkarTesla: require('../assets/fonts/SarkarTesla.ttf'),
+    RudawBold: require('../assets/fonts/RudawBold.ttf'),
   });
 
   useEffect(() => {

@@ -10,6 +10,9 @@ export const FONT_OPTIONS = [
   { id: 'vazir', label: 'مۆدێرن', family: 'Vazirmatn', preview: 'ئەلف با' },
   { id: 'cairo', label: 'نەرم', family: 'Cairo', preview: 'ئەلف با' },
   { id: 'lalezar', label: 'تەزیینی', family: 'Lalezar', preview: 'ئەلف با' },
+  { id: 'rudaw', label: 'ڕوداو', family: 'RudawBold', preview: 'ئەلف با' },
+  { id: 'kosary', label: 'کۆساری', family: 'SarkarKosary', preview: 'ئەلف با' },
+  { id: 'tesla', label: 'تێسلا', family: 'SarkarTesla', preview: 'ئەلف با' },
 ];
 
 export function familyForFont(id) {
