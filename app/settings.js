@@ -3,10 +3,11 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useSettings, useTheme } from '../../src/store/SettingsContext';
-import { THEME_LIST } from '../../src/theme/themes';
-import { TAFSIR_OPTIONS } from '../../src/lib/tafsir';
-import { RECITERS } from '../../src/lib/reciters';
+import { useSettings, useTheme } from '../src/store/SettingsContext';
+import { THEME_LIST } from '../src/theme/themes';
+import { TAFSIR_OPTIONS } from '../src/lib/tafsir';
+import { RECITERS } from '../src/lib/reciters';
+import { CALC_METHODS } from '../src/lib/prayer';
 
 const LANGS = [
   { id: 'ku', label: 'کوردی' },
@@ -18,7 +19,7 @@ export default function Settings() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { themeId, readMode, tafsirId, showTafsir, reciterId, language, update } = useSettings();
+  const { themeId, readMode, tafsirId, showTafsir, reciterId, language, calcMethod, madhab, update } = useSettings();
 
   return (
     <ScrollView
@@ -91,6 +92,29 @@ export default function Settings() {
             );
           })}
         </View>
+      </Section>
+
+      {/* Prayer calculation */}
+      <Section c={c} label="شێوازی حیسابی کاتی نوێژ">
+        <Segmented
+          c={c}
+          value={calcMethod}
+          options={CALC_METHODS.map((m) => ({ id: m.id, label: m.name }))}
+          onChange={(v) => update({ calcMethod: v })}
+        />
+      </Section>
+
+      {/* Madhab (Asr) */}
+      <Section c={c} label="مەزهەب (کاتی عەسر)">
+        <Segmented
+          c={c}
+          value={madhab}
+          options={[
+            { id: 'shafi', label: 'شافیعی/گشتی' },
+            { id: 'hanafi', label: 'حەنەفی' },
+          ]}
+          onChange={(v) => update({ madhab: v })}
+        />
       </Section>
 
       {/* Language */}

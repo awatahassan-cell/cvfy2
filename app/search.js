@@ -4,9 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
-import { useTheme } from '../../src/store/SettingsContext';
-import { searchQuran, getSurah, getSurahs } from '../../src/lib/quran';
-import { toArabicDigits } from '../../src/lib/format';
+import { useTheme } from '../src/store/SettingsContext';
+import { searchQuran, getSurah, getSurahs } from '../src/lib/quran';
+import { toArabicDigits } from '../src/lib/format';
 
 const ALL_SURAHS = getSurahs();
 

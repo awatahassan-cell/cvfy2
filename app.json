@@ -18,7 +18,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.imanikurd.quran",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio"],
+        "NSLocationWhenInUseUsageDescription": "شوێن بۆ دیاریکردنی کاتی نوێژ و ئاراستەی قیبلە بەکاردەهێنرێت.",
+        "NSMotionUsageDescription": "پێوەری مقناتیسی بۆ دیاریکردنی ئاراستەی قیبلە بەکاردەهێنرێت."
       }
     },
     "android": {
@@ -41,7 +43,14 @@
         {
           "microphonePermission": false
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "شوێن بۆ دیاریکردنی کاتی نوێژ و ئاراستەی قیبلە بەکاردەهێنرێت."
+        }
+      ],
+      "expo-sensors"
     ],
     "experiments": {
       "typedRoutes": false

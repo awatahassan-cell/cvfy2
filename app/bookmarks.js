@@ -4,9 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
-import { useSettings, useTheme } from '../../src/store/SettingsContext';
-import { getSurah, getSurahAyahs } from '../../src/lib/quran';
-import { toArabicDigits } from '../../src/lib/format';
+import { useSettings, useTheme } from '../src/store/SettingsContext';
+import { getSurah, getSurahAyahs } from '../src/lib/quran';
+import { toArabicDigits } from '../src/lib/format';
 
 export default function Bookmarks() {
   const theme = useTheme();

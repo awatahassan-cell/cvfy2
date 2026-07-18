@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/store/SettingsContext';
 import MiniPlayer from '../../src/components/MiniPlayer';
@@ -11,6 +11,8 @@ export default function TabsLayout() {
   const c = theme.colors;
   const insets = useSafeAreaInsets();
   const tabBarHeight = 58 + insets.bottom;
+
+  const icon = (Lib, name) => ({ color }) => <Lib name={name} size={22} color={color} />;
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -27,44 +29,28 @@ export default function TabsLayout() {
             paddingTop: 8,
             paddingBottom: insets.bottom || 8,
           },
-          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+          tabBarLabelStyle: { fontSize: 10.5, fontWeight: '600' },
         }}
       >
         <Tabs.Screen
           name="index"
-          options={{
-            title: 'سەرەکی',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
-            ),
-          }}
+          options={{ title: 'سەرەکی', tabBarIcon: icon(Ionicons, 'home-outline') }}
         />
         <Tabs.Screen
-          name="search"
-          options={{
-            title: 'گەڕان',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'search' : 'search-outline'} size={22} color={color} />
-            ),
-          }}
+          name="prayer"
+          options={{ title: 'نوێژ', tabBarIcon: icon(MaterialCommunityIcons, 'clock-time-four-outline') }}
         />
         <Tabs.Screen
-          name="bookmarks"
-          options={{
-            title: 'نیشانەکان',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={22} color={color} />
-            ),
-          }}
+          name="qibla"
+          options={{ title: 'قیبلە', tabBarIcon: icon(MaterialCommunityIcons, 'compass-outline') }}
         />
         <Tabs.Screen
-          name="settings"
-          options={{
-            title: 'ڕێکخستن',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'settings' : 'settings-outline'} size={22} color={color} />
-            ),
-          }}
+          name="azkar"
+          options={{ title: 'ئەزکار', tabBarIcon: icon(MaterialCommunityIcons, 'hands-pray') }}
+        />
+        <Tabs.Screen
+          name="more"
+          options={{ title: 'زیاتر', tabBarIcon: icon(Ionicons, 'grid-outline') }}
         />
       </Tabs>
       <MiniPlayer bottom={tabBarHeight + 8} />

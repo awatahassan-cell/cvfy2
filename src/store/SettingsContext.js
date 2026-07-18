@@ -11,6 +11,8 @@ const defaults = {
   showTafsir: true,
   reciterId: 'peshawa',
   language: 'ku', // 'ku' | 'ar' | 'en'
+  calcMethod: 'MuslimWorldLeague',
+  madhab: 'shafi', // 'shafi' | 'hanafi'
   bookmarks: [], // [{ surah, ayah }]
   lastRead: { surah: 1, ayah: 1 },
 };
