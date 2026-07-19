@@ -15,15 +15,15 @@ import { getPrayerTimes, getNextPrayer, PRAYERS } from '../../src/lib/prayer';
 import Glass from '../../src/components/Glass';
 
 const SECTIONS = [
-  { route: '/quran', icon: 'book-open-page-variant', label: 'قورئان', sub: '١١٤ سوورە' },
-  { route: '/azkar', icon: 'hands-pray', label: 'ئەزکار', sub: 'ویرد و نزا' },
-  { route: '/prayer', icon: 'clock-time-four', label: 'کاتی بانگ', sub: 'کاتی نوێژ' },
-  { route: '/qibla', icon: 'compass', label: 'قیبلە', sub: 'ئاراستەی کەعبە' },
-  { route: '/hadiths', icon: 'book-open-variant', label: 'فەرموودە', sub: '٢٤٠ حەدیس' },
-  { route: '/calendar', icon: 'calendar-month', label: 'تەقویم', sub: 'ڕۆژژمێری کۆچی' },
-  { route: '/names', icon: 'star-four-points', label: '٩٩ ناوی خودا', sub: 'ئەسماء الحسنیٰ' },
-  { route: '/seerah', icon: 'timeline-text', label: 'سیرەت', sub: 'ژیانی پێغەمبەر ﷺ' },
-  { route: '/companions', icon: 'account-group', label: 'هاوەڵان', sub: 'صەحابەکان' },
+  { route: '/quran', icon: 'book-open-page-variant', label: 'قورئان', sub: '١١٤ سوورە', grad: ['#F7B183', '#EE8D8D'] },
+  { route: '/azkar', icon: 'hands-pray', label: 'ئەزکار', sub: 'ویرد و نزا', grad: ['#B49BE6', '#CC96D6'] },
+  { route: '/prayer', icon: 'clock-time-four', label: 'کاتی بانگ', sub: 'کاتی نوێژ', grad: ['#F8C784', '#F09E76'] },
+  { route: '/qibla', icon: 'compass', label: 'قیبلە', sub: 'ئاراستەی کەعبە', grad: ['#84C7C0', '#8FAEE6'] },
+  { route: '/hadiths', icon: 'book-open-variant', label: 'فەرموودە', sub: '٢٤٠ حەدیس', grad: ['#EB98B6', '#C795DA'] },
+  { route: '/calendar', icon: 'calendar-month', label: 'تەقویم', sub: 'ڕۆژژمێری کۆچی', grad: ['#8FA8E8', '#B199DE'] },
+  { route: '/names', icon: 'star-four-points', label: '٩٩ ناوی خودا', sub: 'ئەسماء الحسنیٰ', grad: ['#F3A886', '#E98BA6'] },
+  { route: '/seerah', icon: 'timeline-text', label: 'سیرەت', sub: 'ژیانی پێغەمبەر ﷺ', grad: ['#9ECB92', '#84BEB4'] },
+  { route: '/companions', icon: 'account-group', label: 'هاوەڵان', sub: 'صەحابەکان', grad: ['#CA9CE0', '#9E8FD8'] },
 ];
 
 function clockLabel(date) {
@@ -105,13 +105,23 @@ export default function Home() {
       <View style={styles.grid}>
         {SECTIONS.map((s) => (
           <Pressable key={s.route} onPress={() => router.push(s.route)} style={styles.cardWrap}>
-            <Glass style={[styles.card, { backgroundColor: c.card, borderColor: c.line }]}>
-              <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
-                <MaterialCommunityIcons name={s.icon} size={24} color={c.accent} />
-              </View>
-              <Text style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{s.label}</Text>
-              <Text style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
-            </Glass>
+            {theme.gradient ? (
+              <LinearGradient colors={s.grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
+                <View style={[styles.cardIcon, { backgroundColor: 'rgba(255,255,255,0.30)' }]}>
+                  <MaterialCommunityIcons name={s.icon} size={24} color="#fff" />
+                </View>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', textAlign: 'right' }}>{s.label}</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.88)', fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
+              </LinearGradient>
+            ) : (
+              <Glass style={[styles.card, { backgroundColor: c.card, borderColor: c.line, borderWidth: 1 }]}>
+                <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
+                  <MaterialCommunityIcons name={s.icon} size={24} color={c.accent} />
+                </View>
+                <Text style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{s.label}</Text>
+                <Text style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
+              </Glass>
+            )}
           </Pressable>
         ))}
       </View>
@@ -133,7 +143,8 @@ const styles = StyleSheet.create({
   playBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   sectionTitle: { fontSize: 13, fontWeight: '700', textAlign: 'right', paddingHorizontal: 20, marginBottom: 12 },
   grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', paddingHorizontal: 14, gap: 12, justifyContent: 'center' },
-  cardWrap: { width: '30%', minWidth: 100, flexGrow: 1, marginHorizontal: 2, borderRadius: 18, overflow: 'hidden' },
-  card: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14 },
+  cardWrap: { width: '30%', minWidth: 100, flexGrow: 1, marginHorizontal: 2, borderRadius: 22, overflow: 'hidden',
+    shadowColor: '#6a4a8f', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
+  card: { flex: 1, borderRadius: 22, padding: 15, minHeight: 116 },
   cardIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
 });

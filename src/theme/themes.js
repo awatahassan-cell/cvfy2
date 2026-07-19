@@ -7,7 +7,7 @@ export const THEMES = {
     label: 'شووشەیی',
     dark: false,
     swatch: ['#B9A7E6', '#7A3E9D'],
-    gradient: ['#B9A7E6', '#D9AFD4', '#F2CDAF'],
+    gradient: ['#F4CBA6', '#D3AAD9', '#9187CE'],
     glassIntensity: 30,
     glassTint: 'light',
     colors: {
