@@ -15,15 +15,15 @@ import { getPrayerTimes, getNextPrayer, PRAYERS } from '../../src/lib/prayer';
 import Glass from '../../src/components/Glass';
 
 const SECTIONS = [
-  { route: '/quran', icon: 'book-open-page-variant', label: 'قورئان', sub: '١١٤ سوورە', grad: ['#F7B183', '#EE8D8D'] },
-  { route: '/azkar', icon: 'hands-pray', label: 'ئەزکار', sub: 'ویرد و نزا', grad: ['#B49BE6', '#CC96D6'] },
-  { route: '/prayer', icon: 'clock-time-four', label: 'کاتی بانگ', sub: 'کاتی نوێژ', grad: ['#F8C784', '#F09E76'] },
-  { route: '/qibla', icon: 'compass', label: 'قیبلە', sub: 'ئاراستەی کەعبە', grad: ['#84C7C0', '#8FAEE6'] },
-  { route: '/hadiths', icon: 'book-open-variant', label: 'فەرموودە', sub: '٢٤٠ حەدیس', grad: ['#EB98B6', '#C795DA'] },
-  { route: '/calendar', icon: 'calendar-month', label: 'تەقویم', sub: 'ڕۆژژمێری کۆچی', grad: ['#8FA8E8', '#B199DE'] },
-  { route: '/names', icon: 'star-four-points', label: '٩٩ ناوی خودا', sub: 'ئەسماء الحسنیٰ', grad: ['#F3A886', '#E98BA6'] },
-  { route: '/seerah', icon: 'timeline-text', label: 'سیرەت', sub: 'ژیانی پێغەمبەر ﷺ', grad: ['#9ECB92', '#84BEB4'] },
-  { route: '/companions', icon: 'account-group', label: 'هاوەڵان', sub: 'صەحابەکان', grad: ['#CA9CE0', '#9E8FD8'] },
+  { route: '/quran', icon: 'book-open-page-variant', label: 'قورئان', sub: '١١٤ سوورە', grad: ['#F0904F', '#E06565'] },
+  { route: '/azkar', icon: 'hands-pray', label: 'ئەزکار', sub: 'ویرد و نزا', grad: ['#9169D6', '#B563C4'] },
+  { route: '/prayer', icon: 'clock-time-four', label: 'کاتی بانگ', sub: 'کاتی نوێژ', grad: ['#F0A63F', '#E5763E'] },
+  { route: '/qibla', icon: 'compass', label: 'قیبلە', sub: 'ئاراستەی کەعبە', grad: ['#33A99C', '#4B7ED8'] },
+  { route: '/hadiths', icon: 'book-open-variant', label: 'فەرموودە', sub: '٢٤٠ حەدیس', grad: ['#DE5D8C', '#A758C8'] },
+  { route: '/calendar', icon: 'calendar-month', label: 'تەقویم', sub: 'ڕۆژژمێری کۆچی', grad: ['#4C74DE', '#8560CE'] },
+  { route: '/names', icon: 'star-four-points', label: '٩٩ ناوی خودا', sub: 'ئەسماء الحسنیٰ', grad: ['#EC6E44', '#DE517F' ] },
+  { route: '/seerah', icon: 'timeline-text', label: 'سیرەت', sub: 'ژیانی پێغەمبەر ﷺ', grad: ['#5FB44B', '#309C8A'] },
+  { route: '/companions', icon: 'account-group', label: 'هاوەڵان', sub: 'صەحابەکان', grad: ['#A860D2', '#6E5AC8'] },
 ];
 
 function clockLabel(date) {
