@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useTheme } from '../../src/store/SettingsContext';
 
 const RELIGIOUS = [
+  { route: '/qibla', icon: 'compass', label: 'قیبلە', sub: 'ئاراستەی کەعبە' },
   { route: '/calendar', icon: 'calendar-month', label: 'تەقویمی هیجری', sub: 'ڕۆژژمێری کۆچی' },
   { route: '/hadiths', icon: 'book-open-variant', label: 'حەدیسەکان', sub: '٢٤٠ حەدیس' },
   { route: '/names', icon: 'star-four-points', label: '٩٩ ناوی خودا', sub: 'ئەسماء الحسنیٰ' },

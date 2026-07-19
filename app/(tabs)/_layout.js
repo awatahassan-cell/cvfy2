@@ -37,12 +37,12 @@ export default function TabsLayout() {
           options={{ title: 'سەرەکی', tabBarIcon: icon(Ionicons, 'home-outline') }}
         />
         <Tabs.Screen
-          name="prayer"
-          options={{ title: 'نوێژ', tabBarIcon: icon(MaterialCommunityIcons, 'clock-time-four-outline') }}
+          name="quran"
+          options={{ title: 'قورئان', tabBarIcon: icon(MaterialCommunityIcons, 'book-open-page-variant-outline') }}
         />
         <Tabs.Screen
-          name="qibla"
-          options={{ title: 'قیبلە', tabBarIcon: icon(MaterialCommunityIcons, 'compass-outline') }}
+          name="prayer"
+          options={{ title: 'نوێژ', tabBarIcon: icon(MaterialCommunityIcons, 'clock-time-four-outline') }}
         />
         <Tabs.Screen
           name="azkar"

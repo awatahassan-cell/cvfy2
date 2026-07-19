@@ -16,7 +16,13 @@ export default function Bookmarks() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top + 8 }}>
-      <Text style={[styles.title, { color: c.ink }]}>نیشانەکان</Text>
+      <View style={styles.titleRow}>
+        <Pressable hitSlop={12} onPress={() => router.back()}>
+          <Ionicons name="chevron-forward" size={26} color={c.ink} />
+        </Pressable>
+        <Text style={[styles.title, { color: c.ink }]}>نیشانەکان</Text>
+        <View style={{ width: 26 }} />
+      </View>
       <FlatList
         data={bookmarks}
         keyExtractor={(b) => `${b.surah}:${b.ayah}`}
@@ -57,7 +63,8 @@ export default function Bookmarks() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: '800', paddingHorizontal: 20, textAlign: 'right' },
+  titleRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
+  title: { fontSize: 22, fontWeight: '800', textAlign: 'right' },
   row: { flexDirection: 'row-reverse', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1, marginBottom: 10 },
   ar: { fontFamily: 'UthmanicHafs', fontSize: 20, lineHeight: 40, textAlign: 'right', marginTop: 4 },
 });

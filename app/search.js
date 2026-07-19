@@ -30,7 +30,13 @@ export default function Search() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top + 8 }}>
-      <Text style={[styles.title, { color: c.ink }]}>گەڕان</Text>
+      <View style={styles.titleRow}>
+        <Pressable hitSlop={12} onPress={() => router.back()}>
+          <Ionicons name="chevron-forward" size={26} color={c.ink} />
+        </Pressable>
+        <Text style={[styles.title, { color: c.ink }]}>گەڕان</Text>
+        <View style={{ width: 26 }} />
+      </View>
       <View style={[styles.searchBox, { backgroundColor: c.card, borderColor: c.line }]}>
         <Ionicons name="search" size={18} color={c.muted} />
         <TextInput
@@ -91,7 +97,8 @@ export default function Search() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: '800', paddingHorizontal: 20, textAlign: 'right' },
+  titleRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
+  title: { fontSize: 22, fontWeight: '800', textAlign: 'right' },
   searchBox: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, borderWidth: 1 },
   input: { flex: 1, fontSize: 14, padding: 0 },
   row: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, padding: 14, borderRadius: 14, borderWidth: 1, marginBottom: 10 },

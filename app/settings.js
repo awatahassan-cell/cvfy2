@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 import { useSettings, useTheme } from '../src/store/SettingsContext';
 import { THEME_LIST } from '../src/theme/themes';
@@ -27,7 +28,13 @@ export default function Settings() {
       style={{ flex: 1, backgroundColor: c.bg }}
       contentContainerStyle={{ padding: 20, paddingTop: insets.top + 12, paddingBottom: 160 }}
     >
-      <Text style={[styles.title, { color: c.ink }]}>ڕێکخستنەکان</Text>
+      <View style={styles.titleRow}>
+        <Pressable hitSlop={12} onPress={() => router.back()}>
+          <Ionicons name="chevron-forward" size={26} color={c.ink} />
+        </Pressable>
+        <Text style={[styles.title, { color: c.ink }]}>ڕێکخستنەکان</Text>
+        <View style={{ width: 26 }} />
+      </View>
 
       {/* Reading mode */}
       <Section c={c} label="شێوازی خوێندنەوە">
@@ -200,7 +207,8 @@ function ToggleRow({ c, label, value, onToggle }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: '800', marginBottom: 18, textAlign: 'right' },
+  titleRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
+  title: { fontSize: 22, fontWeight: '800', textAlign: 'right' },
   themes: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12 },
   themeChip: { alignItems: 'center', width: 56 },
   swatch: { width: 46, height: 46, borderRadius: 14, flexDirection: 'row', overflow: 'hidden', borderWidth: 2 },

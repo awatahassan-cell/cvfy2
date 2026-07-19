@@ -7,6 +7,7 @@ const PlayerContext = createContext(null);
 
 export function PlayerProvider({ children }) {
   const soundRef = useRef(null);
+  const pendingSeekRef = useRef(null); // fraction (0..1) to seek to once duration is known
   const [current, setCurrent] = useState(null); // { surah, reciterId }
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +31,14 @@ export function PlayerProvider({ children }) {
       if (status.error) setError(String(status.error));
       return;
     }
+    // Apply a pending "start from ayah" seek once the stream reports its duration.
+    if (pendingSeekRef.current != null && status.durationMillis) {
+      const fraction = pendingSeekRef.current;
+      pendingSeekRef.current = null;
+      if (fraction > 0 && soundRef.current) {
+        soundRef.current.setPositionAsync(Math.floor(fraction * status.durationMillis)).catch(() => {});
+      }
+    }
     setPosition(status.positionMillis || 0);
     setDuration(status.durationMillis || 0);
     setIsPlaying(status.isPlaying);
@@ -40,10 +49,11 @@ export function PlayerProvider({ children }) {
   }, []);
 
   const playSurah = useCallback(
-    async (surahNumber, reciterId) => {
+    async (surahNumber, reciterId, startFraction = 0) => {
       try {
         setError(null);
         setIsLoading(true);
+        pendingSeekRef.current = startFraction > 0 ? startFraction : null;
         if (soundRef.current) {
           await soundRef.current.unloadAsync().catch(() => {});
           soundRef.current = null;
@@ -64,6 +74,22 @@ export function PlayerProvider({ children }) {
       }
     },
     [onStatus]
+  );
+
+  // Play a specific ayah of a surah: seek if already loaded, else load then seek.
+  const playAyahAt = useCallback(
+    async (surahNumber, reciterId, startFraction) => {
+      if (current && current.surah === surahNumber && soundRef.current) {
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) {
+          await soundRef.current.setPositionAsync(Math.floor(startFraction * status.durationMillis));
+          await soundRef.current.playAsync();
+          return;
+        }
+      }
+      await playSurah(surahNumber, reciterId, startFraction);
+    },
+    [current, playSurah]
   );
 
   const toggle = useCallback(async () => {
@@ -111,12 +137,13 @@ export function PlayerProvider({ children }) {
       duration,
       error,
       playSurah,
+      playAyahAt,
       toggle,
       seek,
       seekBy,
       stop,
     }),
-    [current, currentSurah, currentReciter, isPlaying, isLoading, position, duration, error, playSurah, toggle, seek, seekBy, stop]
+    [current, currentSurah, currentReciter, isPlaying, isLoading, position, duration, error, playSurah, playAyahAt, toggle, seek, seekBy, stop]
   );
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

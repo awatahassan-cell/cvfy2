@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { Magnetometer } from 'expo-sensors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
-import { useTheme } from '../../src/store/SettingsContext';
-import { useLocation } from '../../src/lib/useLocation';
-import { qiblaDirection } from '../../src/lib/prayer';
-import { toArabicDigits } from '../../src/lib/format';
+import { useTheme } from '../src/store/SettingsContext';
+import { useLocation } from '../src/lib/useLocation';
+import { qiblaDirection } from '../src/lib/prayer';
+import { toArabicDigits } from '../src/lib/format';
 
 export default function Qibla() {
   const theme = useTheme();
@@ -45,6 +46,9 @@ export default function Qibla() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top + 12 }}>
       <View style={styles.head}>
+        <Pressable hitSlop={12} onPress={() => router.back()}>
+          <Ionicons name="chevron-forward" size={26} color={c.ink} />
+        </Pressable>
         <Text style={[styles.title, { color: c.ink }]}>ئاراستەی قیبلە</Text>
         <View style={styles.loc}>
           <Ionicons name="location-outline" size={15} color={c.muted} />

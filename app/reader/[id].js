@@ -19,8 +19,8 @@ export default function Reader() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { readMode, showTafsir, tafsirId, reciterId, isBookmarked, toggleBookmark, setLastRead } = useSettings();
-  const { playSurah, current, position, duration, isPlaying } = usePlayer();
+  const { readMode, showTafsir, tafsirId, reciterId, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
+  const { playSurah, playAyahAt, current, position, duration, isPlaying } = usePlayer();
 
   const surah = getSurah(surahNumber);
   const ayahs = useMemo(() => getSurahAyahs(surahNumber), [surahNumber]);
@@ -67,6 +67,12 @@ export default function Reader() {
   // Start playback in place — the mini-player bar handles the rest (no navigation).
   const listen = () => playSurah(surahNumber, reciterId);
 
+  // Tap an ayah → play from that ayah (estimated position within the surah audio).
+  const playAyah = (index) => {
+    const startFraction = index <= 0 ? 0 : cumFractions[index - 1];
+    playAyahAt(surahNumber, reciterId, startFraction);
+  };
+
   const showStandaloneBasmala = surahNumber !== 1 && surahNumber !== 9;
 
   return (
@@ -82,15 +88,20 @@ export default function Reader() {
             {surah?.place} · {toArabicDigits(surah?.numberOfAyahs)} ئایە
           </Text>
         </View>
-        <Pressable
-          style={[styles.listenBtn, { backgroundColor: isThisSurahPlaying ? c.accent : c.accentSoft }]}
-          onPress={listen}
-        >
-          <Ionicons name="headset" size={16} color={isThisSurahPlaying ? c.onAccent : c.accent} />
-          <Text style={{ color: isThisSurahPlaying ? c.onAccent : c.accent, fontSize: 12, fontWeight: '700' }}>
-            گوێگرتن
-          </Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
+          <Pressable
+            style={[styles.iconBtn, { backgroundColor: showTafsir ? c.accent : c.accentSoft }]}
+            onPress={() => update({ showTafsir: !showTafsir })}
+          >
+            <Ionicons name={showTafsir ? 'document-text' : 'document-text-outline'} size={18} color={showTafsir ? c.onAccent : c.accent} />
+          </Pressable>
+          <Pressable
+            style={[styles.iconBtn, { backgroundColor: isThisSurahPlaying ? c.accent : c.accentSoft }]}
+            onPress={listen}
+          >
+            <Ionicons name="headset" size={17} color={isThisSurahPlaying ? c.onAccent : c.accent} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 180 }}>
@@ -101,9 +112,9 @@ export default function Reader() {
         {showStandaloneBasmala && <Text style={[styles.basmala, { color: c.ink }]}>{BASMALA}</Text>}
 
         {readMode === 'page' ? (
-          <PageMode c={c} ayahs={ayahs} activeAyah={activeAyah} />
+          <PageMode c={c} ayahs={ayahs} activeAyah={activeAyah} onPlayAyah={playAyah} />
         ) : (
-          ayahs.map((a) => (
+          ayahs.map((a, idx) => (
             <View
               key={a.ayah}
               onLayout={(e) => {
@@ -114,12 +125,13 @@ export default function Reader() {
                 c={c}
                 ayah={a}
                 active={activeAyah === a.ayah}
+                playing={activeAyah === a.ayah && isPlaying}
                 tafsir={tafsirMap[a.ayah]}
                 tafsirName={tafsirName}
                 tafsirDir={tafsirOpt.dir}
                 bookmarked={isBookmarked(surahNumber, a.ayah)}
                 onBookmark={() => toggleBookmark(surahNumber, a.ayah)}
-                onPlay={listen}
+                onPlay={() => playAyah(idx)}
               />
             </View>
           ))
@@ -140,7 +152,7 @@ export default function Reader() {
   );
 }
 
-function AyahCard({ c, ayah, active, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
+function AyahCard({ c, ayah, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
   const isLtr = tafsirDir === 'ltr';
   return (
     <View
@@ -155,17 +167,18 @@ function AyahCard({ c, ayah, active, tafsir, tafsirName, tafsirDir, bookmarked, 
             {toArabicDigits(ayah.ayah)}
           </Text>
         </View>
-        <View style={{ flexDirection: 'row-reverse', gap: 16 }}>
-          {active ? <Ionicons name="volume-high" size={20} color={c.accent} /> : null}
+        <View style={{ flexDirection: 'row-reverse', gap: 16, alignItems: 'center' }}>
           <Pressable hitSlop={8} onPress={onPlay}>
-            <Ionicons name="play-circle-outline" size={22} color={c.muted} />
+            <Ionicons name={playing ? 'pause-circle' : 'play-circle'} size={24} color={active ? c.accent : c.muted} />
           </Pressable>
           <Pressable hitSlop={8} onPress={onBookmark}>
             <Ionicons name={bookmarked ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked ? c.accent : c.muted} />
           </Pressable>
         </View>
       </View>
-      <Text style={[styles.arLine, { color: c.ink }]}>{ayah.text}</Text>
+      <Pressable onPress={onPlay}>
+        <Text style={[styles.arLine, { color: c.ink }]}>{ayah.text}</Text>
+      </Pressable>
       {tafsir ? (
         <View style={[styles.tafBox, { borderTopColor: c.line }]}>
           <Text style={{ color: c.accent, fontWeight: '700', fontSize: 11, marginBottom: 4, textAlign: isLtr ? 'left' : 'right' }}>{tafsirName}</Text>
@@ -183,13 +196,14 @@ function AyahCard({ c, ayah, active, tafsir, tafsirName, tafsirDir, bookmarked, 
   );
 }
 
-function PageMode({ c, ayahs, activeAyah }) {
+function PageMode({ c, ayahs, activeAyah, onPlayAyah }) {
   return (
     <View style={[styles.pageFrame, { borderColor: c.accent, backgroundColor: c.card }]}>
       <Text style={[styles.flow, { color: c.ink }]}>
-        {ayahs.map((a) => (
+        {ayahs.map((a, idx) => (
           <Text
             key={a.ayah}
+            onPress={() => onPlayAyah(idx)}
             style={activeAyah === a.ayah ? { color: c.accent, backgroundColor: c.accentSoft } : null}
           >
             {a.text}{' '}
@@ -204,7 +218,7 @@ function PageMode({ c, ayahs, activeAyah }) {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
   hTitle: { fontSize: 16, fontWeight: '800' },
-  listenBtn: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 100 },
+  iconBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   banner: { borderWidth: 1.5, borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 10 },
   bannerText: { fontFamily: 'UthmanicHafs', fontSize: 26 },
   basmala: { fontFamily: 'UthmanicHafs', fontSize: 22, textAlign: 'center', marginBottom: 14 },
