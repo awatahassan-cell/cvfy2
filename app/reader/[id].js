@@ -10,6 +10,7 @@ import { getSurah, getSurahAyahs } from '../../src/lib/quran';
 import { getTafsirForSurah, getTafsirOption } from '../../src/lib/tafsir';
 import { toArabicDigits } from '../../src/lib/format';
 import MiniPlayer from '../../src/components/MiniPlayer';
+import Glass from '../../src/components/Glass';
 
 const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 
@@ -155,7 +156,7 @@ export default function Reader() {
 function AyahCard({ c, ayah, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
   const isLtr = tafsirDir === 'ltr';
   return (
-    <View
+    <Glass
       style={[
         styles.card,
         { backgroundColor: active ? c.accentSoft : c.card, borderColor: active ? c.accent : c.line },
@@ -192,13 +193,13 @@ function AyahCard({ c, ayah, active, playing, tafsir, tafsirName, tafsirDir, boo
           </Text>
         </View>
       ) : null}
-    </View>
+    </Glass>
   );
 }
 
 function PageMode({ c, ayahs, activeAyah, onPlayAyah }) {
   return (
-    <View style={[styles.pageFrame, { borderColor: c.accent, backgroundColor: c.card }]}>
+    <Glass style={[styles.pageFrame, { borderColor: c.accent, backgroundColor: c.card }]}>
       <Text style={[styles.flow, { color: c.ink }]}>
         {ayahs.map((a, idx) => (
           <Text
@@ -211,7 +212,7 @@ function PageMode({ c, ayahs, activeAyah, onPlayAyah }) {
           </Text>
         ))}
       </Text>
-    </View>
+    </Glass>
   );
 }
 

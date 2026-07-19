@@ -12,6 +12,7 @@ import { toArabicDigits } from '../../src/lib/format';
 import { formatHijri } from '../../src/lib/hijri';
 import { useLocation } from '../../src/lib/useLocation';
 import { getPrayerTimes, getNextPrayer, PRAYERS } from '../../src/lib/prayer';
+import Glass from '../../src/components/Glass';
 
 const SECTIONS = [
   { route: '/quran', icon: 'book-open-page-variant', label: 'قورئان', sub: '١١٤ سوورە' },
@@ -103,16 +104,14 @@ export default function Home() {
       <Text style={[styles.sectionTitle, { color: c.muted }]}>بەشەکان</Text>
       <View style={styles.grid}>
         {SECTIONS.map((s) => (
-          <Pressable
-            key={s.route}
-            onPress={() => router.push(s.route)}
-            style={[styles.card, { backgroundColor: c.card, borderColor: c.line }]}
-          >
-            <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
-              <MaterialCommunityIcons name={s.icon} size={24} color={c.accent} />
-            </View>
-            <Text style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{s.label}</Text>
-            <Text style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
+          <Pressable key={s.route} onPress={() => router.push(s.route)} style={styles.cardWrap}>
+            <Glass style={[styles.card, { backgroundColor: c.card, borderColor: c.line }]}>
+              <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
+                <MaterialCommunityIcons name={s.icon} size={24} color={c.accent} />
+              </View>
+              <Text style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{s.label}</Text>
+              <Text style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
+            </Glass>
           </Pressable>
         ))}
       </View>
@@ -134,6 +133,7 @@ const styles = StyleSheet.create({
   playBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   sectionTitle: { fontSize: 13, fontWeight: '700', textAlign: 'right', paddingHorizontal: 20, marginBottom: 12 },
   grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', paddingHorizontal: 14, gap: 12, justifyContent: 'center' },
-  card: { width: '30%', minWidth: 100, flexGrow: 1, borderRadius: 18, borderWidth: 1, padding: 14, marginHorizontal: 2 },
+  cardWrap: { width: '30%', minWidth: 100, flexGrow: 1, marginHorizontal: 2, borderRadius: 18, overflow: 'hidden' },
+  card: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14 },
   cardIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
 });
