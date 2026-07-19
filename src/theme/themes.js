@@ -1,5 +1,27 @@
-// Five hand-tuned palettes. Each theme is a complete color set.
+// Hand-tuned palettes. Each theme is a complete color set.
+// A `gradient` array turns the app background into a full-screen gradient
+// (glassmorphism); its tokens use translucent whites so cards read as frosted glass.
 export const THEMES = {
+  aurora: {
+    id: 'aurora',
+    label: 'شووشەیی',
+    dark: true,
+    swatch: ['#6A4A8E', '#FFE0B0'],
+    gradient: ['#3A2A63', '#5E3F86', '#8E5580'],
+    colors: {
+      bg: 'transparent',
+      panel: 'transparent',
+      card: 'rgba(0,0,0,0.22)',
+      ink: '#FFFFFF',
+      muted: 'rgba(255,255,255,0.82)',
+      line: 'rgba(255,255,255,0.16)',
+      accent: '#FFD98A',
+      accentSoft: 'rgba(0,0,0,0.28)',
+      onAccent: '#2E2050',
+      photo1: '#6A4A8F',
+      photo2: '#2A1F4D',
+    },
+  },
   cream: {
     id: 'cream',
     label: 'کرێمی',
@@ -98,4 +120,4 @@ export const THEMES = {
 };
 
 export const THEME_LIST = Object.values(THEMES);
-export const DEFAULT_THEME = 'cream';
+export const DEFAULT_THEME = 'aurora';

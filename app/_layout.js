@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -19,8 +21,11 @@ function ThemedStack() {
   // Apply the chosen UI font, then remount the tree so every Text re-renders with it.
   setUIFontFamily(familyForFont(fontId));
   return (
-    <React.Fragment key={fontId}>
+    <View style={{ flex: 1 }} key={fontId}>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
+      {theme.gradient ? (
+        <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
+      ) : null}
       <Stack
         screenOptions={{
           headerShown: false,
@@ -32,7 +37,7 @@ function ThemedStack() {
         <Stack.Screen name="reader/[id]" />
         <Stack.Screen name="player" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
-    </React.Fragment>
+    </View>
   );
 }
 
