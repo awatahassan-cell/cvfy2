@@ -10,6 +10,7 @@ const defaults = {
   tafsirId: 'asan',
   showTafsir: true,
   tajweed: false,
+  fontScale: 1,
   reciterId: 'peshawa',
   language: 'ku', // 'ku' | 'ar' | 'en'
   fontId: 'system',

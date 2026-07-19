@@ -21,7 +21,8 @@ export default function Reader() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { readMode, showTafsir, tafsirId, reciterId, tajweed, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
+  const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
+  const scale = fontScale || 1;
   const { playSurah, playAyahAt, current, position, duration, isPlaying } = usePlayer();
 
   const surah = getSurah(surahNumber);
@@ -117,10 +118,10 @@ export default function Reader() {
         <View style={[styles.banner, { borderColor: c.accent, backgroundColor: c.card }]}>
           <Text style={[styles.bannerText, { color: c.accent }]}>{surah?.suraNameFormatted || surah?.name}</Text>
         </View>
-        {showStandaloneBasmala && <Text style={[styles.basmala, { color: c.ink }]}>{BASMALA}</Text>}
+        {showStandaloneBasmala && <Text style={[styles.basmala, { color: c.ink, fontSize: 22 * scale }]}>{BASMALA}</Text>}
 
         {readMode === 'page' ? (
-          <PageMode c={c} ayahs={ayahs} activeAyah={activeAyah} onPlayAyah={playAyah} />
+          <PageMode c={c} ayahs={ayahs} activeAyah={activeAyah} onPlayAyah={playAyah} scale={scale} />
         ) : (
           ayahs.map((a, idx) => (
             <View
@@ -134,6 +135,7 @@ export default function Reader() {
                 ayah={a}
                 surah={surahNumber}
                 tajweed={tajweed}
+                scale={scale}
                 active={activeAyah === a.ayah}
                 playing={activeAyah === a.ayah && isPlaying}
                 tafsir={tafsirMap[a.ayah]}
@@ -162,7 +164,7 @@ export default function Reader() {
   );
 }
 
-function AyahCard({ c, ayah, surah, tajweed, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
+function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
   const isLtr = tafsirDir === 'ltr';
   return (
     <Glass
@@ -192,13 +194,13 @@ function AyahCard({ c, ayah, surah, tajweed, active, playing, tafsir, tafsirName
             surah={surah}
             ayah={ayah.ayah}
             fontFamily="UthmanicHafs"
-            fontSize={26}
+            fontSize={Math.round(26 * scale)}
             showVerseNumber={false}
             style={{ color: c.ink }}
             containerStyle={{ justifyContent: 'flex-end' }}
           />
         ) : (
-          <Text style={[styles.arLine, { color: c.ink }]}>{ayah.text}</Text>
+          <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 52 * scale }]}>{ayah.text}</Text>
         )}
       </Pressable>
       {tafsir ? (
@@ -207,7 +209,7 @@ function AyahCard({ c, ayah, surah, tajweed, active, playing, tafsir, tafsirName
           <Text
             style={[
               styles.tafText,
-              { color: c.muted, textAlign: isLtr ? 'left' : 'right', writingDirection: isLtr ? 'ltr' : 'rtl' },
+              { color: c.muted, fontSize: 14 * scale, lineHeight: 26 * scale, textAlign: isLtr ? 'left' : 'right', writingDirection: isLtr ? 'ltr' : 'rtl' },
             ]}
           >
             {tafsir}
@@ -218,10 +220,10 @@ function AyahCard({ c, ayah, surah, tajweed, active, playing, tafsir, tafsirName
   );
 }
 
-function PageMode({ c, ayahs, activeAyah, onPlayAyah }) {
+function PageMode({ c, ayahs, activeAyah, onPlayAyah, scale = 1 }) {
   return (
     <Glass style={[styles.pageFrame, { borderColor: c.accent, backgroundColor: c.card }]}>
-      <Text style={[styles.flow, { color: c.ink }]}>
+      <Text style={[styles.flow, { color: c.ink, fontSize: 24 * scale, lineHeight: 58 * scale }]}>
         {ayahs.map((a, idx) => (
           <Text
             key={a.ayah}

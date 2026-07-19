@@ -10,6 +10,7 @@ import { TAFSIR_OPTIONS, TAFSIR_LANGS } from '../src/lib/tafsir';
 import { RECITERS } from '../src/lib/reciters';
 import { CALC_METHODS } from '../src/lib/prayer';
 import { FONT_OPTIONS } from '../src/lib/uiFont';
+import { toArabicDigits } from '../src/lib/format';
 
 const LANGS = [
   { id: 'ku', label: 'کوردی' },
@@ -21,7 +22,8 @@ export default function Settings() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { themeId, readMode, tafsirId, showTafsir, tajweed, reciterId, language, calcMethod, madhab, fontId, update } = useSettings();
+  const { themeId, readMode, tafsirId, showTafsir, tajweed, fontScale, reciterId, language, calcMethod, madhab, fontId, update } = useSettings();
+  const setScale = (v) => update({ fontScale: Math.max(0.8, Math.min(1.8, Math.round(v * 10) / 10)) });
 
   return (
     <ScrollView
@@ -35,6 +37,22 @@ export default function Settings() {
         <Text style={[styles.title, { color: c.ink }]}>ڕێکخستنەکان</Text>
         <View style={{ width: 26 }} />
       </View>
+
+      {/* Font size */}
+      <Section c={c} label="قەبارەی نووسین">
+        <View style={[styles.sizeRow, { backgroundColor: c.card, borderColor: c.line }]}>
+          <Pressable onPress={() => setScale(fontScale - 0.1)} style={[styles.sizeBtn, { backgroundColor: c.accentSoft }]}>
+            <Text style={{ color: c.accent, fontSize: 15, fontWeight: '800' }}>ﺃ−</Text>
+          </Pressable>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ color: c.ink, fontFamily: 'UthmanicHafs', fontSize: 20 * fontScale }}>ﺑِﺴْﻢِ ﺍﻟﻠَّﻪ</Text>
+            <Text style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{toArabicDigits(Math.round(fontScale * 100))}٪</Text>
+          </View>
+          <Pressable onPress={() => setScale(fontScale + 0.1)} style={[styles.sizeBtn, { backgroundColor: c.accent }]}>
+            <Text style={{ color: c.onAccent, fontSize: 18, fontWeight: '800' }}>ﺃ+</Text>
+          </Pressable>
+        </View>
+      </Section>
 
       {/* Reading mode */}
       <Section c={c} label="شێوازی خوێندنەوە">
@@ -242,6 +260,8 @@ const styles = StyleSheet.create({
   chipWrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 100, borderWidth: 1 },
   fontChip: { alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, borderWidth: 1, minWidth: 74 },
+  sizeRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderRadius: 14, borderWidth: 1 },
+  sizeBtn: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   legend: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },
   legendItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
   dot: { width: 12, height: 12, borderRadius: 6 },
