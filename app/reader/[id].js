@@ -11,7 +11,7 @@ import { getTafsirForSurah, getTafsirOption } from '../../src/lib/tafsir';
 import { toArabicDigits } from '../../src/lib/format';
 import MiniPlayer from '../../src/components/MiniPlayer';
 import Glass from '../../src/components/Glass';
-import { QuranVerse } from 'react-native-quran-tajweed';
+import TajweedText from '../../src/components/TajweedText';
 
 const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 
@@ -190,15 +190,7 @@ function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir,
       </View>
       <Pressable onPress={onPlay}>
         {tajweed ? (
-          <QuranVerse
-            surah={surah}
-            ayah={ayah.ayah}
-            fontFamily="UthmanicHafs"
-            fontSize={Math.round(26 * scale)}
-            showVerseNumber={false}
-            style={{ color: c.ink }}
-            containerStyle={{ justifyContent: 'flex-end' }}
-          />
+          <TajweedText surah={surah} ayah={ayah.ayah} fontSize={26 * scale} color={c.ink} fallbackText={ayah.text} />
         ) : (
           <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 52 * scale }]}>{ayah.text}</Text>
         )}
