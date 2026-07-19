@@ -23,7 +23,7 @@ export default function Reader() {
   const insets = useSafeAreaInsets();
   const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
   const scale = fontScale || 1;
-  const { playSurah, playAyahAt, current, position, duration, isPlaying } = usePlayer();
+  const { playSurah, playAyah: playAyahAudio, current, currentAyah, mode, position, duration, isPlaying } = usePlayer();
 
   const surah = getSurah(surahNumber);
   const ayahs = useMemo(() => getSurahAyahs(surahNumber), [surahNumber]);
@@ -43,13 +43,18 @@ export default function Reader() {
     return lens.map((l) => (acc += l) / total);
   }, [ayahs]);
 
-  const isThisSurahPlaying = current && current.surah === surahNumber && duration > 0;
+  const isThisSurahPlaying = current && current.surah === surahNumber;
   const activeAyah = useMemo(() => {
     if (!isThisSurahPlaying) return null;
-    const frac = position / duration;
-    const idx = cumFractions.findIndex((f) => frac <= f);
-    return ayahs[idx === -1 ? ayahs.length - 1 : idx]?.ayah ?? null;
-  }, [isThisSurahPlaying, position, duration, cumFractions, ayahs]);
+    // Per-ayah mode reports the exact ayah; whole-surah mode estimates by length.
+    if (mode === 'ayah' && currentAyah != null) return currentAyah;
+    if (duration > 0) {
+      const frac = position / duration;
+      const idx = cumFractions.findIndex((f) => frac <= f);
+      return ayahs[idx === -1 ? ayahs.length - 1 : idx]?.ayah ?? null;
+    }
+    return null;
+  }, [isThisSurahPlaying, mode, currentAyah, position, duration, cumFractions, ayahs]);
 
   // Auto-scroll to the active ayah while playing.
   const scrollRef = useRef(null);
@@ -70,10 +75,10 @@ export default function Reader() {
   // Start playback in place — the mini-player bar handles the rest (no navigation).
   const listen = () => playSurah(surahNumber, reciterId);
 
-  // Tap an ayah → play from that ayah (estimated position within the surah audio).
+  // Tap an ayah → recite that exact ayah (per-ayah audio), then auto-advance.
   const playAyah = (index) => {
-    const startFraction = index <= 0 ? 0 : cumFractions[index - 1];
-    playAyahAt(surahNumber, reciterId, startFraction);
+    const ayahNumber = ayahs[index]?.ayah ?? index + 1;
+    playAyahAudio(surahNumber, ayahNumber, reciterId, ayahs.length);
   };
 
   const showStandaloneBasmala = surahNumber !== 1 && surahNumber !== 9;

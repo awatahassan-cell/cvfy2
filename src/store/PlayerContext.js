@@ -1,14 +1,18 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Audio } from 'expo-av';
 import { getSurah } from '../lib/quran';
-import { recitationUrl, getReciter } from '../lib/reciters';
+import { recitationUrl, ayahUrl, getReciter, supportsAyahAudio } from '../lib/reciters';
 
 const PlayerContext = createContext(null);
 
 export function PlayerProvider({ children }) {
   const soundRef = useRef(null);
   const pendingSeekRef = useRef(null); // fraction (0..1) to seek to once duration is known
+  const advanceRef = useRef(null); // called on finish when playing ayah-by-ayah
+
   const [current, setCurrent] = useState(null); // { surah, reciterId }
+  const [mode, setMode] = useState('surah'); // 'surah' | 'ayah'
+  const [currentAyah, setCurrentAyah] = useState(null); // active ayah in 'ayah' mode
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState(0);
@@ -31,7 +35,6 @@ export function PlayerProvider({ children }) {
       if (status.error) setError(String(status.error));
       return;
     }
-    // Apply a pending "start from ayah" seek once the stream reports its duration.
     if (pendingSeekRef.current != null && status.durationMillis) {
       const fraction = pendingSeekRef.current;
       pendingSeekRef.current = null;
@@ -43,29 +46,33 @@ export function PlayerProvider({ children }) {
     setDuration(status.durationMillis || 0);
     setIsPlaying(status.isPlaying);
     if (status.didJustFinish) {
-      setIsPlaying(false);
-      setPosition(0);
+      // Auto-advance to the next ayah when reciting ayah-by-ayah.
+      if (advanceRef.current) {
+        const advance = advanceRef.current;
+        advanceRef.current = null;
+        advance();
+      } else {
+        setIsPlaying(false);
+        setPosition(0);
+      }
     }
   }, []);
 
-  const playSurah = useCallback(
-    async (surahNumber, reciterId, startFraction = 0) => {
+  const loadAndPlay = useCallback(
+    async (uri) => {
+      setError(null);
+      setIsLoading(true);
       try {
-        setError(null);
-        setIsLoading(true);
-        pendingSeekRef.current = startFraction > 0 ? startFraction : null;
         if (soundRef.current) {
           await soundRef.current.unloadAsync().catch(() => {});
           soundRef.current = null;
         }
-        const uri = recitationUrl(reciterId, surahNumber);
         const { sound } = await Audio.Sound.createAsync(
           { uri },
           { shouldPlay: true, progressUpdateIntervalMillis: 400 },
           onStatus
         );
         soundRef.current = sound;
-        setCurrent({ surah: surahNumber, reciterId });
         setIsPlaying(true);
       } catch (e) {
         setError('نەتوانرا دەنگ باربکرێت. پەیوەندی ئینتەرنێت بپشکنە.');
@@ -76,20 +83,42 @@ export function PlayerProvider({ children }) {
     [onStatus]
   );
 
-  // Play a specific ayah of a surah: seek if already loaded, else load then seek.
-  const playAyahAt = useCallback(
-    async (surahNumber, reciterId, startFraction) => {
-      if (current && current.surah === surahNumber && soundRef.current) {
-        const status = await soundRef.current.getStatusAsync();
-        if (status.isLoaded && status.durationMillis) {
-          await soundRef.current.setPositionAsync(Math.floor(startFraction * status.durationMillis));
-          await soundRef.current.playAsync();
-          return;
-        }
-      }
-      await playSurah(surahNumber, reciterId, startFraction);
+  const playSurah = useCallback(
+    async (surahNumber, reciterId, startFraction = 0) => {
+      advanceRef.current = null;
+      pendingSeekRef.current = startFraction > 0 ? startFraction : null;
+      setMode('surah');
+      setCurrentAyah(null);
+      setCurrent({ surah: surahNumber, reciterId });
+      await loadAndPlay(recitationUrl(reciterId, surahNumber));
     },
-    [current, playSurah]
+    [loadAndPlay]
+  );
+
+  // True per-ayah playback: recite one ayah, then auto-advance to the next.
+  const playAyah = useCallback(
+    async (surahNumber, ayah, reciterId, total) => {
+      const uri = ayahUrl(reciterId, surahNumber, ayah);
+      if (!uri) {
+        // Reciter has no per-ayah files → estimate position within the surah audio.
+        const fraction = total > 1 ? (ayah - 1) / total : 0;
+        return playSurah(surahNumber, reciterId, fraction);
+      }
+      pendingSeekRef.current = null;
+      setMode('ayah');
+      setCurrentAyah(ayah);
+      setCurrent({ surah: surahNumber, reciterId });
+      advanceRef.current = () => {
+        if (ayah < total) {
+          playAyah(surahNumber, ayah + 1, reciterId, total);
+        } else {
+          advanceRef.current = null;
+          setIsPlaying(false);
+        }
+      };
+      await loadAndPlay(uri);
+    },
+    [loadAndPlay, playSurah]
   );
 
   const toggle = useCallback(async () => {
@@ -115,6 +144,7 @@ export function PlayerProvider({ children }) {
   );
 
   const stop = useCallback(async () => {
+    advanceRef.current = null;
     const s = soundRef.current;
     if (s) {
       await s.stopAsync().catch(() => {});
@@ -131,19 +161,22 @@ export function PlayerProvider({ children }) {
       current,
       currentSurah,
       currentReciter,
+      mode,
+      currentAyah,
       isPlaying,
       isLoading,
       position,
       duration,
       error,
       playSurah,
-      playAyahAt,
+      playAyah,
+      supportsAyahAudio,
       toggle,
       seek,
       seekBy,
       stop,
     }),
-    [current, currentSurah, currentReciter, isPlaying, isLoading, position, duration, error, playSurah, playAyahAt, toggle, seek, seekBy, stop]
+    [current, currentSurah, currentReciter, mode, currentAyah, isPlaying, isLoading, position, duration, error, playSurah, playAyah, toggle, seek, seekBy, stop]
   );
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
