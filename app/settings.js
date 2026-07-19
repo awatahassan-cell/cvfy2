@@ -21,7 +21,7 @@ export default function Settings() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { themeId, readMode, tafsirId, showTafsir, reciterId, language, calcMethod, madhab, fontId, update } = useSettings();
+  const { themeId, readMode, tafsirId, showTafsir, tajweed, reciterId, language, calcMethod, madhab, fontId, update } = useSettings();
 
   return (
     <ScrollView
@@ -64,6 +64,32 @@ export default function Settings() {
               </Pressable>
             );
           })}
+        </View>
+      </Section>
+
+      {/* Tajweed coloring */}
+      <Section c={c} label="ڕەنگکردنی تەجوید">
+        <ToggleRow
+          c={c}
+          label="ئەحکامی تەجوید بە ڕەنگ پیشان بدە"
+          value={tajweed}
+          onToggle={() => update({ tajweed: !tajweed })}
+        />
+        <View style={[styles.legend, { backgroundColor: c.card, borderColor: c.line }]}>
+          {[
+            ['مەد', '#FF8C00'],
+            ['قەلقەلە', '#40E0D0'],
+            ['غونە', '#4CAF50'],
+            ['ئیخفا', '#66BB6A'],
+            ['ئیدغام', '#43A047'],
+            ['ئیقلاب', '#26A69A'],
+            ['تەفخیم', '#007EFF'],
+          ].map(([name, col]) => (
+            <View key={name} style={styles.legendItem}>
+              <View style={[styles.dot, { backgroundColor: col }]} />
+              <Text style={{ color: c.ink, fontSize: 12 }}>{name}</Text>
+            </View>
+          ))}
         </View>
       </Section>
 
@@ -216,6 +242,9 @@ const styles = StyleSheet.create({
   chipWrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 100, borderWidth: 1 },
   fontChip: { alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, borderWidth: 1, minWidth: 74 },
+  legend: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },
+  legendItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
+  dot: { width: 12, height: 12, borderRadius: 6 },
   segBtn: { flexGrow: 1, paddingVertical: 9, paddingHorizontal: 8, borderRadius: 10, alignItems: 'center' },
   listRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
   toggleRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },

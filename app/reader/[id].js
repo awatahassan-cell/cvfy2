@@ -11,6 +11,7 @@ import { getTafsirForSurah, getTafsirOption } from '../../src/lib/tafsir';
 import { toArabicDigits } from '../../src/lib/format';
 import MiniPlayer from '../../src/components/MiniPlayer';
 import Glass from '../../src/components/Glass';
+import { QuranVerse } from 'react-native-quran-tajweed';
 
 const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 
@@ -20,7 +21,7 @@ export default function Reader() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { readMode, showTafsir, tafsirId, reciterId, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
+  const { readMode, showTafsir, tafsirId, reciterId, tajweed, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
   const { playSurah, playAyahAt, current, position, duration, isPlaying } = usePlayer();
 
   const surah = getSurah(surahNumber);
@@ -91,6 +92,12 @@ export default function Reader() {
         </View>
         <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
           <Pressable
+            style={[styles.iconBtn, { backgroundColor: tajweed ? c.accent : c.accentSoft }]}
+            onPress={() => update({ tajweed: !tajweed })}
+          >
+            <Ionicons name={tajweed ? 'color-palette' : 'color-palette-outline'} size={18} color={tajweed ? c.onAccent : c.accent} />
+          </Pressable>
+          <Pressable
             style={[styles.iconBtn, { backgroundColor: showTafsir ? c.accent : c.accentSoft }]}
             onPress={() => update({ showTafsir: !showTafsir })}
           >
@@ -125,6 +132,8 @@ export default function Reader() {
               <AyahCard
                 c={c}
                 ayah={a}
+                surah={surahNumber}
+                tajweed={tajweed}
                 active={activeAyah === a.ayah}
                 playing={activeAyah === a.ayah && isPlaying}
                 tafsir={tafsirMap[a.ayah]}
@@ -153,7 +162,7 @@ export default function Reader() {
   );
 }
 
-function AyahCard({ c, ayah, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
+function AyahCard({ c, ayah, surah, tajweed, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
   const isLtr = tafsirDir === 'ltr';
   return (
     <Glass
@@ -178,7 +187,19 @@ function AyahCard({ c, ayah, active, playing, tafsir, tafsirName, tafsirDir, boo
         </View>
       </View>
       <Pressable onPress={onPlay}>
-        <Text style={[styles.arLine, { color: c.ink }]}>{ayah.text}</Text>
+        {tajweed ? (
+          <QuranVerse
+            surah={surah}
+            ayah={ayah.ayah}
+            fontFamily="UthmanicHafs"
+            fontSize={26}
+            showVerseNumber={false}
+            style={{ color: c.ink }}
+            containerStyle={{ justifyContent: 'flex-end' }}
+          />
+        ) : (
+          <Text style={[styles.arLine, { color: c.ink }]}>{ayah.text}</Text>
+        )}
       </Pressable>
       {tafsir ? (
         <View style={[styles.tafBox, { borderTopColor: c.line }]}>

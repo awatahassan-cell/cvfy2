@@ -9,6 +9,7 @@ const defaults = {
   readMode: 'continuous', // 'continuous' | 'page'
   tafsirId: 'asan',
   showTafsir: true,
+  tajweed: false,
   reciterId: 'peshawa',
   language: 'ku', // 'ku' | 'ar' | 'en'
   fontId: 'system',
