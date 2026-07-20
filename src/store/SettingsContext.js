@@ -17,6 +17,9 @@ const defaults = {
   calcMethod: 'MuslimWorldLeague',
   madhab: 'shafi', // 'shafi' | 'hanafi'
   notifyPrayer: false,
+  muezzin: 'makkah',
+  adhanOn: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },
+  numberStyle: 'ar', // 'ar' (١٢٣) | 'en' (123)
   bookmarks: [], // [{ surah, ayah }]
   lastRead: { surah: 1, ayah: 1 },
 };

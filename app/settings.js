@@ -1,15 +1,16 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, Modal } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 import { useSettings, useTheme } from '../src/store/SettingsContext';
 import { THEME_LIST } from '../src/theme/themes';
-import { TAFSIR_OPTIONS, TAFSIR_LANGS } from '../src/lib/tafsir';
+import { TAFSIR_OPTIONS } from '../src/lib/tafsir';
 import { RECITERS } from '../src/lib/reciters';
 import { CALC_METHODS } from '../src/lib/prayer';
 import { FONT_OPTIONS } from '../src/lib/uiFont';
+import { ADHANS } from '../src/lib/adhans';
 import { toArabicDigits } from '../src/lib/format';
 
 const LANGS = [
@@ -17,257 +18,166 @@ const LANGS = [
   { id: 'ar', label: 'عربي' },
   { id: 'en', label: 'English' },
 ];
+const NUMBER_STYLES = [
+  { id: 'ar', label: 'کوردی (١٢٣)' },
+  { id: 'en', label: 'ئینگلیزی (123)' },
+];
+const READ_MODES = [
+  { id: 'continuous', label: 'بەردەوام (Uthmanic)' },
+  { id: 'page', label: 'پەڕە بە پەڕە (QCF)' },
+];
+const MADHABS = [
+  { id: 'shafi', label: 'شافیعی / گشتی' },
+  { id: 'hanafi', label: 'حەنەفی' },
+];
+const FONT_SIZES = [0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.6, 1.8].map((v) => ({ id: v, label: `${toArabicDigits(Math.round(v * 100))}٪` }));
+
+const labelOf = (opts, id, key = 'label') => opts.find((o) => o.id === id)?.[key] ?? '';
 
 export default function Settings() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { themeId, readMode, tafsirId, showTafsir, tajweed, fontScale, reciterId, language, calcMethod, madhab, fontId, update } = useSettings();
-  const setScale = (v) => update({ fontScale: Math.max(0.8, Math.min(1.8, Math.round(v * 10) / 10)) });
+  const s = useSettings();
+  const { update } = s;
+  const [picker, setPicker] = useState(null); // { title, options, value, onSelect }
+
+  const openPicker = (cfg) => setPicker(cfg);
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={{ padding: 20, paddingTop: insets.top + 12, paddingBottom: 160 }}
-    >
-      <View style={styles.titleRow}>
-        <Pressable hitSlop={12} onPress={() => router.back()}>
-          <Ionicons name="chevron-forward" size={26} color={c.ink} />
-        </Pressable>
-        <Text style={[styles.title, { color: c.ink }]}>ڕێکخستنەکان</Text>
-        <View style={{ width: 26 }} />
-      </View>
-
-      {/* Font size */}
-      <Section c={c} label="قەبارەی نووسین">
-        <View style={[styles.sizeRow, { backgroundColor: c.card, borderColor: c.line }]}>
-          <Pressable onPress={() => setScale(fontScale - 0.1)} style={[styles.sizeBtn, { backgroundColor: c.accentSoft }]}>
-            <Text style={{ color: c.accent, fontSize: 15, fontWeight: '800' }}>ﺃ−</Text>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Pressable hitSlop={12} onPress={() => router.back()}>
+            <Ionicons name="chevron-forward" size={26} color={c.ink} />
           </Pressable>
-          <View style={{ alignItems: 'center' }}>
-            <Text style={{ color: c.ink, fontFamily: 'UthmanicHafs', fontSize: 20 * fontScale }}>ﺑِﺴْﻢِ ﺍﻟﻠَّﻪ</Text>
-            <Text style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{toArabicDigits(Math.round(fontScale * 100))}٪</Text>
-          </View>
-          <Pressable onPress={() => setScale(fontScale + 0.1)} style={[styles.sizeBtn, { backgroundColor: c.accent }]}>
-            <Text style={{ color: c.onAccent, fontSize: 18, fontWeight: '800' }}>ﺃ+</Text>
-          </Pressable>
+          <Text style={[styles.title, { color: c.ink }]}>ڕێکخستنەکان</Text>
+          <View style={{ width: 26 }} />
         </View>
-      </Section>
 
-      {/* Reading mode */}
-      <Section c={c} label="شێوازی خوێندنەوە">
-        <Segmented
-          c={c}
-          value={readMode}
-          options={[
-            { id: 'continuous', label: 'بەردەوام (Uthmanic)' },
-            { id: 'page', label: 'پەڕە بە پەڕە (QCF)' },
-          ]}
-          onChange={(v) => update({ readMode: v })}
-        />
-      </Section>
+        {/* گشتی */}
+        <SectionLabel c={c}>گشتی</SectionLabel>
+        <Grid>
+          <Card c={c} lib={Ionicons} icon="language" label="زمان" value={labelOf(LANGS, s.language)}
+            onPress={() => openPicker({ title: 'زمان', options: LANGS, value: s.language, onSelect: (v) => update({ language: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="palette-outline" label="ڕووکەش" value={labelOf(THEME_LIST, s.themeId)}
+            onPress={() => openPicker({ title: 'ڕەنگی ڕووکار', options: THEME_LIST, value: s.themeId, onSelect: (v) => update({ themeId: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="format-font" label="شێوەی فۆنت" value={labelOf(FONT_OPTIONS, s.fontId)}
+            onPress={() => openPicker({ title: 'فۆنتی نووسین', options: FONT_OPTIONS, value: s.fontId, onSelect: (v) => update({ fontId: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="format-size" label="قەبارەی فۆنت" value={`${toArabicDigits(Math.round((s.fontScale || 1) * 100))}٪`}
+            onPress={() => openPicker({ title: 'قەبارەی نووسین', options: FONT_SIZES, value: s.fontScale || 1, onSelect: (v) => update({ fontScale: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="numeric" label="شێوازی ژمارەکان" value={labelOf(NUMBER_STYLES, s.numberStyle)}
+            onPress={() => openPicker({ title: 'شێوازی ژمارەکان', options: NUMBER_STYLES, value: s.numberStyle, onSelect: (v) => update({ numberStyle: v }) })} />
+        </Grid>
 
-      {/* Theme */}
-      <Section c={c} label="ڕەنگی ڕووکار">
-        <View style={styles.themes}>
-          {THEME_LIST.map((t) => {
-            const sel = t.id === themeId;
-            return (
-              <Pressable key={t.id} style={styles.themeChip} onPress={() => update({ themeId: t.id })}>
-                <View style={[styles.swatch, { borderColor: sel ? c.accent : 'transparent' }]}>
-                  <View style={{ flex: 1, backgroundColor: t.swatch[0] }} />
-                  <View style={{ flex: 1, backgroundColor: t.swatch[1] }} />
-                </View>
-                <Text style={{ color: sel ? c.accent : c.muted, fontSize: 11, marginTop: 5 }}>{t.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Section>
+        {/* قورئان */}
+        <SectionLabel c={c}>قورئان</SectionLabel>
+        <Grid>
+          <Card c={c} lib={MaterialCommunityIcons} icon="book-open-page-variant" label="شێوازی خوێندنەوە" value={labelOf(READ_MODES, s.readMode)}
+            onPress={() => openPicker({ title: 'شێوازی خوێندنەوە', options: READ_MODES, value: s.readMode, onSelect: (v) => update({ readMode: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="text-box-outline" label="تەفسیر" value={labelOf(TAFSIR_OPTIONS, s.tafsirId, 'name')}
+            onPress={() => openPicker({ title: 'تەفسیر', options: TAFSIR_OPTIONS.map((t) => ({ id: t.id, label: t.name })), value: s.tafsirId, onSelect: (v) => update({ tafsirId: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="account-voice" label="قورئان‌خوێن" value={labelOf(RECITERS, s.reciterId, 'name')}
+            onPress={() => openPicker({ title: 'قورئان‌خوێن', options: RECITERS.map((r) => ({ id: r.id, label: r.name })), value: s.reciterId, onSelect: (v) => update({ reciterId: v }) })} />
+          <ToggleCard c={c} lib={MaterialCommunityIcons} icon="palette" label="ڕەنگی تەجوید" on={s.tajweed} onToggle={() => update({ tajweed: !s.tajweed })} />
+        </Grid>
 
-      {/* Tajweed coloring */}
-      <Section c={c} label="ڕەنگکردنی تەجوید">
-        <ToggleRow
-          c={c}
-          label="ئەحکامی تەجوید بە ڕەنگ پیشان بدە"
-          value={tajweed}
-          onToggle={() => update({ tajweed: !tajweed })}
-        />
-        <View style={[styles.legend, { backgroundColor: c.card, borderColor: c.line }]}>
-          {[
-            ['مەد', '#FF8C00'],
-            ['قەلقەلە', '#40E0D0'],
-            ['غونە', '#4CAF50'],
-            ['ئیخفا', '#66BB6A'],
-            ['ئیدغام', '#43A047'],
-            ['ئیقلاب', '#26A69A'],
-            ['تەفخیم', '#007EFF'],
-          ].map(([name, col]) => (
-            <View key={name} style={styles.legendItem}>
-              <View style={[styles.dot, { backgroundColor: col }]} />
-              <Text style={{ color: c.ink, fontSize: 12 }}>{name}</Text>
-            </View>
-          ))}
-        </View>
-      </Section>
+        {/* نوێژ */}
+        <SectionLabel c={c}>ڕێکخستنی نوێژ</SectionLabel>
+        <Grid>
+          <Card c={c} lib={MaterialCommunityIcons} icon="account-tie-voice" label="بانگبێژ" value={labelOf(ADHANS, s.muezzin, 'name')}
+            onPress={() => openPicker({ title: 'بانگبێژ', options: ADHANS.map((a) => ({ id: a.id, label: a.name })), value: s.muezzin, onSelect: (v) => update({ muezzin: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="calculator-variant-outline" label="شێوازی حیساب" value={labelOf(CALC_METHODS, s.calcMethod, 'name')}
+            onPress={() => openPicker({ title: 'شێوازی حیسابی نوێژ', options: CALC_METHODS.map((m) => ({ id: m.id, label: m.name })), value: s.calcMethod, onSelect: (v) => update({ calcMethod: v }) })} />
+          <Card c={c} lib={MaterialCommunityIcons} icon="mosque" label="مەزهەب" value={labelOf(MADHABS, s.madhab)}
+            onPress={() => openPicker({ title: 'مەزهەب (کاتی عەسر)', options: MADHABS, value: s.madhab, onSelect: (v) => update({ madhab: v }) })} />
+          <ToggleCard c={c} lib={Ionicons} icon="notifications" label="بیرخەرەوەکان" on={s.notifyPrayer} onToggle={() => update({ notifyPrayer: !s.notifyPrayer })} />
+        </Grid>
 
-      {/* UI font */}
-      <Section c={c} label="فۆنتی نووسین">
-        <View style={styles.chipWrap}>
-          {FONT_OPTIONS.map((f) => {
-            const sel = f.id === fontId;
-            return (
-              <Pressable
-                key={f.id}
-                onPress={() => update({ fontId: f.id })}
-                style={[styles.fontChip, { backgroundColor: sel ? c.accent : c.card, borderColor: sel ? c.accent : c.line }]}
-              >
-                <Text style={{ color: sel ? c.onAccent : c.ink, fontSize: 18, fontFamily: f.family || undefined }}>
-                  {f.preview}
-                </Text>
-                <Text style={{ color: sel ? c.onAccent : c.muted, fontSize: 11, marginTop: 3 }}>{f.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Section>
+        {/* زیاتر */}
+        <SectionLabel c={c}>زیاتر</SectionLabel>
+        <Grid>
+          <Card c={c} lib={Ionicons} icon="cloud-download-outline" label="داگرتنەکان" value="بەڕێوەبردن" onPress={() => router.push('/downloads')} />
+          <Card c={c} lib={Ionicons} icon="bookmark-outline" label="نیشانەکان" value="" onPress={() => router.push('/bookmarks')} />
+        </Grid>
 
-      {/* Tafsir selection — grouped by language */}
-      <Section c={c} label="تەفسیر (کوردی · عەرەبی · ئینگلیزی)">
-        {TAFSIR_LANGS.map((lang) => (
-          <View key={lang.id} style={{ marginBottom: 12 }}>
-            <Text style={{ color: c.muted, fontSize: 11, marginBottom: 6, textAlign: 'right' }}>{lang.label}</Text>
-            <View style={styles.chipWrap}>
-              {TAFSIR_OPTIONS.filter((t) => t.lang === lang.id).map((t) => {
-                const sel = t.id === tafsirId;
+        <Text style={{ color: c.muted, fontSize: 11, textAlign: 'center', marginTop: 22 }}>
+          ئیمانی کورد · وەشان ١.٠
+        </Text>
+      </ScrollView>
+
+      {/* Picker overlay */}
+      <Modal visible={!!picker} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
+        <Pressable style={styles.backdrop} onPress={() => setPicker(null)}>
+          <Pressable style={[styles.sheet, { backgroundColor: c.panel === 'transparent' ? '#241A47' : c.panel }]} onPress={() => {}}>
+            <Text style={[styles.sheetTitle, { color: c.ink }]}>{picker?.title}</Text>
+            <ScrollView style={{ maxHeight: 380 }}>
+              {picker?.options.map((o) => {
+                const sel = o.id === picker.value;
                 return (
                   <Pressable
-                    key={t.id}
-                    onPress={() => update({ tafsirId: t.id })}
-                    style={[styles.chip, { backgroundColor: sel ? c.accent : c.card, borderColor: sel ? c.accent : c.line }]}
+                    key={String(o.id)}
+                    onPress={() => { picker.onSelect(o.id); setPicker(null); }}
+                    style={[styles.opt, { backgroundColor: sel ? c.accentSoft : 'transparent' }]}
                   >
-                    <Text style={{ color: sel ? c.onAccent : c.ink, fontSize: 13, fontWeight: sel ? '700' : '500' }}>{t.name}</Text>
+                    <Text style={{ color: sel ? c.accent : c.ink, fontSize: 15, fontWeight: sel ? '700' : '500' }}>{o.label}</Text>
+                    {sel && <Ionicons name="checkmark-circle" size={20} color={c.accent} />}
                   </Pressable>
                 );
               })}
-            </View>
-          </View>
-        ))}
-        <ToggleRow
-          c={c}
-          label="پیشاندانی تەفسیر لەژێر ئایەت"
-          value={showTafsir}
-          onToggle={() => update({ showTafsir: !showTafsir })}
-        />
-      </Section>
-
-      {/* Default reciter */}
-      <Section c={c} label="قورئان‌خوێنی بنەڕەت">
-        <View style={{ gap: 8 }}>
-          {RECITERS.map((r) => {
-            const sel = r.id === reciterId;
-            return (
-              <Pressable
-                key={r.id}
-                onPress={() => update({ reciterId: r.id })}
-                style={[styles.listRow, { backgroundColor: c.card, borderColor: sel ? c.accent : c.line }]}
-              >
-                <Text style={{ color: c.ink, fontSize: 14 }}>{r.name}</Text>
-                {sel && <Ionicons name="checkmark-circle" size={20} color={c.accent} />}
-              </Pressable>
-            );
-          })}
-        </View>
-      </Section>
-
-      {/* Prayer calculation */}
-      <Section c={c} label="شێوازی حیسابی کاتی نوێژ">
-        <Segmented
-          c={c}
-          value={calcMethod}
-          options={CALC_METHODS.map((m) => ({ id: m.id, label: m.name }))}
-          onChange={(v) => update({ calcMethod: v })}
-        />
-      </Section>
-
-      {/* Madhab (Asr) */}
-      <Section c={c} label="مەزهەب (کاتی عەسر)">
-        <Segmented
-          c={c}
-          value={madhab}
-          options={[
-            { id: 'shafi', label: 'شافیعی/گشتی' },
-            { id: 'hanafi', label: 'حەنەفی' },
-          ]}
-          onChange={(v) => update({ madhab: v })}
-        />
-      </Section>
-
-      {/* Language */}
-      <Section c={c} label="زمانی ڕووکار">
-        <Segmented c={c} value={language} options={LANGS} onChange={(v) => update({ language: v })} />
-      </Section>
-
-      <Text style={{ color: c.muted, fontSize: 11, textAlign: 'center', marginTop: 10 }}>
-        داتا: imanikurd-quran · فۆنت: KFGQPC Uthmanic Hafs
-      </Text>
-    </ScrollView>
-  );
-}
-
-function Section({ c, label, children }) {
-  return (
-    <View style={{ marginBottom: 24 }}>
-      <Text style={{ color: c.muted, fontSize: 12, fontWeight: '700', marginBottom: 10, textAlign: 'right' }}>{label}</Text>
-      {children}
-    </View>
-  );
-}
-
-function Segmented({ c, value, options, onChange }) {
-  return (
-    <View style={[styles.seg, { backgroundColor: c.card, borderColor: c.line }]}>
-      {options.map((o) => {
-        const sel = o.id === value;
-        return (
-          <Pressable key={o.id} style={[styles.segBtn, sel && { backgroundColor: c.accent }]} onPress={() => onChange(o.id)}>
-            <Text style={{ color: sel ? c.onAccent : c.muted, fontSize: 12, fontWeight: sel ? '700' : '500' }}>{o.label}</Text>
+            </ScrollView>
           </Pressable>
-        );
-      })}
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
-function ToggleRow({ c, label, value, onToggle }) {
+function SectionLabel({ c, children }) {
+  return <Text style={[styles.section, { color: c.muted }]}>{children}</Text>;
+}
+
+function Grid({ children }) {
+  return <View style={styles.grid}>{children}</View>;
+}
+
+function Card({ c, lib: Lib, icon, label, value, onPress }) {
   return (
-    <Pressable onPress={onToggle} style={[styles.toggleRow, { backgroundColor: c.card, borderColor: c.line }]}>
-      <Text style={{ color: c.ink, fontSize: 13 }}>{label}</Text>
-      <View style={[styles.switch, { backgroundColor: value ? c.accent : c.line }]}>
-        <View style={[styles.knob, { transform: [{ translateX: value ? -18 : 0 }] }]} />
+    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: c.card, borderColor: c.line }]}>
+      <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
+        <Lib name={icon} size={22} color={c.accent} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text numberOfLines={1} style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{label}</Text>
+        {value ? <Text numberOfLines={1} style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{value}</Text> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+function ToggleCard({ c, lib: Lib, icon, label, on, onToggle }) {
+  return (
+    <Pressable onPress={onToggle} style={[styles.card, { backgroundColor: c.card, borderColor: on ? c.accent : c.line }]}>
+      <View style={[styles.cardIcon, { backgroundColor: on ? c.accent : c.accentSoft }]}>
+        <Lib name={icon} size={22} color={on ? c.onAccent : c.accent} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text numberOfLines={1} style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{label}</Text>
+        <Text style={{ color: on ? c.accent : c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{on ? 'چالاک' : 'ناچالاک'}</Text>
       </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  titleRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
-  title: { fontSize: 22, fontWeight: '800', textAlign: 'right' },
-  themes: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12 },
-  themeChip: { alignItems: 'center', width: 56 },
-  swatch: { width: 46, height: 46, borderRadius: 14, flexDirection: 'row', overflow: 'hidden', borderWidth: 2 },
-  seg: { flexDirection: 'row-reverse', borderRadius: 14, borderWidth: 1, padding: 4, gap: 4, flexWrap: 'wrap' },
-  chipWrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 100, borderWidth: 1 },
-  fontChip: { alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, borderWidth: 1, minWidth: 74 },
-  sizeRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderRadius: 14, borderWidth: 1 },
-  sizeBtn: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  legend: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },
-  legendItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
-  dot: { width: 12, height: 12, borderRadius: 6 },
-  segBtn: { flexGrow: 1, paddingVertical: 9, paddingHorizontal: 8, borderRadius: 10, alignItems: 'center' },
-  listRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
-  toggleRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 10 },
-  switch: { width: 44, height: 26, borderRadius: 100, padding: 3, flexDirection: 'row', justifyContent: 'flex-end' },
-  knob: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff' },
+  header: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 6 },
+  title: { fontSize: 22, fontWeight: '800' },
+  section: { fontSize: 14, fontWeight: '800', textAlign: 'right', paddingHorizontal: 20, marginTop: 18, marginBottom: 10 },
+  grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16 },
+  card: { width: '47%', flexGrow: 1, flexDirection: 'row-reverse', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, borderWidth: 1 },
+  cardIcon: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 20, paddingBottom: 40 },
+  sheetTitle: { fontSize: 17, fontWeight: '800', textAlign: 'right', marginBottom: 14 },
+  opt: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14, borderRadius: 14, marginBottom: 4 },
 });
