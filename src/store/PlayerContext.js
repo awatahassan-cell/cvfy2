@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import { Audio } from 'expo-av';
 import { getSurah } from '../lib/quran';
 import { recitationUrl, ayahUrl, getReciter, supportsAyahAudio } from '../lib/reciters';
+import { localUri } from '../lib/downloads';
 
 const PlayerContext = createContext(null);
 
@@ -90,7 +91,9 @@ export function PlayerProvider({ children }) {
       setMode('surah');
       setCurrentAyah(null);
       setCurrent({ surah: surahNumber, reciterId });
-      await loadAndPlay(recitationUrl(reciterId, surahNumber));
+      // Prefer the offline copy if this surah has been downloaded.
+      const local = await localUri(reciterId, surahNumber).catch(() => null);
+      await loadAndPlay(local || recitationUrl(reciterId, surahNumber));
     },
     [loadAndPlay]
   );

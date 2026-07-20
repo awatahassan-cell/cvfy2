@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -100,29 +101,47 @@ export default function Home() {
         </Pressable>
       </Pressable>
 
+      {/* Morning / evening azkar */}
+      <View style={styles.azkarRow}>
+        <Pressable style={styles.azkarWrap} onPress={() => router.push('/azkar/27')}>
+          <LinearGradient colors={['#F6A94C', '#EC7F5A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.azkarBtn}>
+            <MaterialCommunityIcons name="weather-sunset-up" size={22} color="#fff" />
+            <Text style={styles.azkarText}>ئەزکاری بەیانی</Text>
+          </LinearGradient>
+        </Pressable>
+        <Pressable style={styles.azkarWrap} onPress={() => router.push('/azkar/28')}>
+          <LinearGradient colors={['#6E5AC8', '#8E5E9E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.azkarBtn}>
+            <MaterialCommunityIcons name="weather-night" size={22} color="#fff" />
+            <Text style={styles.azkarText}>ئەزکاری ئێوارە</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+
       {/* Sections grid */}
       <Text style={[styles.sectionTitle, { color: c.muted }]}>بەشەکان</Text>
       <View style={styles.grid}>
-        {SECTIONS.map((s) => (
-          <Pressable key={s.route} onPress={() => router.push(s.route)} style={styles.cardWrap}>
-            {theme.gradient ? (
-              <LinearGradient colors={s.grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
-                <View style={[styles.cardIcon, { backgroundColor: 'rgba(255,255,255,0.30)' }]}>
-                  <MaterialCommunityIcons name={s.icon} size={24} color="#fff" />
-                </View>
-                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', textAlign: 'right' }}>{s.label}</Text>
-                <Text style={{ color: 'rgba(255,255,255,0.88)', fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
-              </LinearGradient>
-            ) : (
-              <Glass style={[styles.card, { backgroundColor: c.card, borderColor: c.line, borderWidth: 1 }]}>
-                <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
-                  <MaterialCommunityIcons name={s.icon} size={24} color={c.accent} />
-                </View>
-                <Text style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{s.label}</Text>
-                <Text style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
-              </Glass>
-            )}
-          </Pressable>
+        {SECTIONS.map((s, i) => (
+          <Animated.View key={s.route} entering={FadeInDown.delay(i * 45).springify().damping(16)} style={styles.cardWrap}>
+            <Pressable onPress={() => router.push(s.route)} style={{ flex: 1 }}>
+              {theme.gradient ? (
+                <LinearGradient colors={s.grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
+                  <View style={[styles.cardIcon, { backgroundColor: 'rgba(255,255,255,0.30)' }]}>
+                    <MaterialCommunityIcons name={s.icon} size={24} color="#fff" />
+                  </View>
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800', textAlign: 'right' }}>{s.label}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.88)', fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
+                </LinearGradient>
+              ) : (
+                <Glass style={[styles.card, { backgroundColor: c.card, borderColor: c.line, borderWidth: 1 }]}>
+                  <View style={[styles.cardIcon, { backgroundColor: c.accentSoft }]}>
+                    <MaterialCommunityIcons name={s.icon} size={24} color={c.accent} />
+                  </View>
+                  <Text style={{ color: c.ink, fontSize: 14, fontWeight: '700', textAlign: 'right' }}>{s.label}</Text>
+                  <Text style={{ color: c.muted, fontSize: 11, textAlign: 'right', marginTop: 2 }}>{s.sub}</Text>
+                </Glass>
+              )}
+            </Pressable>
+          </Animated.View>
         ))}
       </View>
     </ScrollView>
@@ -141,6 +160,10 @@ const styles = StyleSheet.create({
   stripTime: { color: '#fff', fontSize: 18, fontWeight: '800', marginTop: 6 },
   continueCard: { flexDirection: 'row-reverse', alignItems: 'center', marginHorizontal: 20, borderRadius: 20, borderWidth: 1, padding: 16, marginBottom: 22, gap: 12 },
   playBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  azkarRow: { flexDirection: 'row-reverse', gap: 12, paddingHorizontal: 20, marginBottom: 22 },
+  azkarWrap: { flex: 1, borderRadius: 18, overflow: 'hidden', shadowColor: '#6a4a8f', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
+  azkarBtn: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 18 },
+  azkarText: { color: '#fff', fontSize: 14, fontWeight: '800' },
   sectionTitle: { fontSize: 13, fontWeight: '700', textAlign: 'right', paddingHorizontal: 20, marginBottom: 12 },
   grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', paddingHorizontal: 14, gap: 12, justifyContent: 'center' },
   cardWrap: { width: '30%', minWidth: 100, flexGrow: 1, marginHorizontal: 2, borderRadius: 22, overflow: 'hidden',

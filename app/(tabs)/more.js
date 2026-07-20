@@ -18,6 +18,7 @@ const RELIGIOUS = [
 const TOOLS = [
   { route: '/search', icon: 'search', label: 'گەڕان' },
   { route: '/bookmarks', icon: 'bookmark', label: 'نیشانەکان' },
+  { route: '/downloads', icon: 'cloud-download', label: 'داگرتنەکان' },
   { route: '/settings', icon: 'settings', label: 'ڕێکخستنەکان' },
 ];
 

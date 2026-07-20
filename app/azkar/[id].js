@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import * as Speech from 'expo-speech';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 
@@ -30,7 +32,9 @@ export default function AzkarDetail() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
         {items.map((item, i) => (
-          <DhikrCard key={item.id} c={c} item={item} index={i + 1} />
+          <Animated.View key={item.id} entering={FadeInDown.delay(i * 40).springify().damping(16)}>
+            <DhikrCard c={c} item={item} index={i + 1} />
+          </Animated.View>
         ))}
       </ScrollView>
     </View>
@@ -40,7 +44,26 @@ export default function AzkarDetail() {
 function DhikrCard({ c, item, index }) {
   const target = item.count || 1;
   const [done, setDone] = useState(0);
+  const [speaking, setSpeaking] = useState(false);
   const complete = done >= target;
+
+  useEffect(() => () => Speech.stop(), []);
+
+  const toggleSpeak = () => {
+    if (speaking) {
+      Speech.stop();
+      setSpeaking(false);
+      return;
+    }
+    setSpeaking(true);
+    Speech.speak(item.arabic, {
+      language: 'ar',
+      rate: 0.8,
+      onDone: () => setSpeaking(false),
+      onStopped: () => setSpeaking(false),
+      onError: () => setSpeaking(false),
+    });
+  };
 
   return (
     <View style={[styles.card, { backgroundColor: c.card, borderColor: complete ? c.accent : c.line }]}>
@@ -48,11 +71,12 @@ function DhikrCard({ c, item, index }) {
         <View style={[styles.idx, { backgroundColor: c.accentSoft }]}>
           <Text style={{ color: c.accent, fontSize: 11, fontWeight: '700' }}>{toArabicDigits(index)}</Text>
         </View>
-        {target > 1 && (
-          <Text style={{ color: c.muted, fontSize: 12 }}>
-            جار: {toArabicDigits(target)}
-          </Text>
-        )}
+        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
+          {target > 1 && <Text style={{ color: c.muted, fontSize: 12 }}>جار: {toArabicDigits(target)}</Text>}
+          <Pressable hitSlop={8} onPress={toggleSpeak}>
+            <Ionicons name={speaking ? 'stop-circle' : 'volume-high'} size={22} color={c.accent} />
+          </Pressable>
+        </View>
       </View>
 
       <Text style={[styles.arabic, { color: c.ink }]}>{item.arabic}</Text>

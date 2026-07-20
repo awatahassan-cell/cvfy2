@@ -12,6 +12,7 @@ import { toArabicDigits } from '../../src/lib/format';
 import MiniPlayer from '../../src/components/MiniPlayer';
 import Glass from '../../src/components/Glass';
 import TajweedText from '../../src/components/TajweedText';
+import { useDownloads } from '../../src/store/DownloadsContext';
 
 const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 
@@ -24,6 +25,7 @@ export default function Reader() {
   const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
   const scale = fontScale || 1;
   const { playSurah, playAyah: playAyahAudio, current, currentAyah, mode, position, duration, isPlaying } = usePlayer();
+  const { isDownloaded, download, remove, progressFor } = useDownloads();
 
   const surah = getSurah(surahNumber);
   const ayahs = useMemo(() => getSurahAyahs(surahNumber), [surahNumber]);
@@ -96,7 +98,14 @@ export default function Reader() {
             {surah?.place} · {toArabicDigits(surah?.numberOfAyahs)} ئایە
           </Text>
         </View>
-        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6 }}>
+          <DownloadButton
+            c={c}
+            downloaded={isDownloaded(reciterId, surahNumber)}
+            progress={progressFor(reciterId, surahNumber)}
+            onDownload={() => download(reciterId, surahNumber)}
+            onRemove={() => remove(reciterId, surahNumber)}
+          />
           <Pressable
             style={[styles.iconBtn, { backgroundColor: tajweed ? c.accent : c.accentSoft }]}
             onPress={() => update({ tajweed: !tajweed })}
@@ -169,6 +178,26 @@ export default function Reader() {
   );
 }
 
+function DownloadButton({ c, downloaded, progress, onDownload, onRemove }) {
+  const downloading = progress != null;
+  return (
+    <Pressable
+      style={[styles.iconBtn, { backgroundColor: downloaded ? c.accent : c.accentSoft }]}
+      onPress={() => (downloaded ? onRemove() : downloading ? null : onDownload())}
+    >
+      {downloading ? (
+        <Text style={{ color: c.accent, fontSize: 10, fontWeight: '800' }}>{Math.round(progress * 100)}٪</Text>
+      ) : (
+        <Ionicons
+          name={downloaded ? 'checkmark-circle' : 'download-outline'}
+          size={18}
+          color={downloaded ? c.onAccent : c.accent}
+        />
+      )}
+    </Pressable>
+  );
+}
+
 function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir, tafsirName, tafsirDir, bookmarked, onBookmark, onPlay }) {
   const isLtr = tafsirDir === 'ltr';
   return (
@@ -218,28 +247,31 @@ function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir,
 }
 
 function PageMode({ c, ayahs, activeAyah, onPlayAyah, scale = 1 }) {
+  // Note: onPress must not sit on the nested ayah <Text> spans — react-native-web
+  // crashes on nested pressable Text. The whole page is tappable instead.
   return (
-    <Glass style={[styles.pageFrame, { borderColor: c.accent, backgroundColor: c.card }]}>
-      <Text style={[styles.flow, { color: c.ink, fontSize: 24 * scale, lineHeight: 58 * scale }]}>
-        {ayahs.map((a, idx) => (
-          <Text
-            key={a.ayah}
-            onPress={() => onPlayAyah(idx)}
-            style={activeAyah === a.ayah ? { color: c.accent, backgroundColor: c.accentSoft } : null}
-          >
-            {a.text}{' '}
-            <Text style={{ color: c.accent }}>{`۝${toArabicDigits(a.ayah)}`} </Text>
-          </Text>
-        ))}
-      </Text>
-    </Glass>
+    <Pressable onPress={() => onPlayAyah(0)}>
+      <Glass style={[styles.pageFrame, { borderColor: c.accent, backgroundColor: c.card }]}>
+        <Text style={[styles.flow, { color: c.ink, fontSize: 24 * scale, lineHeight: 58 * scale }]}>
+          {ayahs.map((a) => (
+            <Text
+              key={a.ayah}
+              style={activeAyah === a.ayah ? { color: c.accent, backgroundColor: c.accentSoft } : null}
+            >
+              {a.text}{' '}
+              <Text style={{ color: c.accent }}>{`۝${toArabicDigits(a.ayah)}`} </Text>
+            </Text>
+          ))}
+        </Text>
+      </Glass>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
   hTitle: { fontSize: 16, fontWeight: '800' },
-  iconBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   banner: { borderWidth: 1.5, borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 10 },
   bannerText: { fontFamily: 'UthmanicHafs', fontSize: 26 },
   basmala: { fontFamily: 'UthmanicHafs', fontSize: 22, textAlign: 'center', marginBottom: 14 },

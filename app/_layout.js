@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { SettingsProvider, useTheme, useSettings } from '../src/store/SettingsContext';
 import { PlayerProvider } from '../src/store/PlayerContext';
+import { DownloadsProvider } from '../src/store/DownloadsContext';
 import { installUIFontPatch, setUIFontFamily, familyForFont } from '../src/lib/uiFont';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -64,9 +65,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SettingsProvider>
-          <PlayerProvider>
-            <ThemedStack />
-          </PlayerProvider>
+          <DownloadsProvider>
+            <PlayerProvider>
+              <ThemedStack />
+            </PlayerProvider>
+          </DownloadsProvider>
         </SettingsProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
