@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 import { useTheme } from '../../src/store/SettingsContext';
-import { getSurahs } from '../../src/lib/quran';
+import { getSurahs, getSurah, getJuzList, getHizbList, getPageList } from '../../src/lib/quran';
 import { toArabicDigits } from '../../src/lib/format';
 
 const SURAHS = getSurahs();
+const JUZ = getJuzList();
+const HIZB = getHizbList();
+const PAGES = getPageList();
 const TABS = ['سوورە', 'جوزء', 'حزب', 'پەڕە'];
 
 export default function Quran() {
@@ -16,6 +19,13 @@ export default function Quran() {
   const c = theme.colors;
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState(0);
+
+  const { data, kind } = useMemo(() => {
+    if (tab === 1) return { data: JUZ, kind: 'juz' };
+    if (tab === 2) return { data: HIZB, kind: 'hizb' };
+    if (tab === 3) return { data: PAGES, kind: 'page' };
+    return { data: SURAHS, kind: 'surah' };
+  }, [tab]);
 
   const Header = (
     <View>
@@ -45,11 +55,17 @@ export default function Quran() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top + 6 }}>
       <FlatList
-        data={SURAHS}
-        keyExtractor={(s) => String(s.number)}
+        data={data}
+        keyExtractor={(item) => kind + '-' + (item.number)}
         ListHeaderComponent={Header}
         contentContainerStyle={{ paddingBottom: 160 }}
-        renderItem={({ item }) => <SurahRow c={c} surah={item} />}
+        renderItem={({ item }) =>
+          kind === 'surah' ? (
+            <SurahRow c={c} surah={item} />
+          ) : (
+            <IndexRow c={c} kind={kind} item={item} />
+          )
+        }
       />
     </View>
   );
@@ -57,10 +73,7 @@ export default function Quran() {
 
 function SurahRow({ c, surah }) {
   return (
-    <Pressable
-      style={[styles.srow, { borderBottomColor: c.line }]}
-      onPress={() => router.push('/reader/' + surah.number)}
-    >
+    <Pressable style={[styles.srow, { borderBottomColor: c.line }]} onPress={() => router.push('/reader/' + surah.number)}>
       <View style={styles.numWrap}>
         <Ionicons name="star" size={38} color={c.accentSoft} style={{ position: 'absolute' }} />
         <Text style={[styles.num, { color: c.accent }]}>{toArabicDigits(surah.number)}</Text>
@@ -72,6 +85,24 @@ function SurahRow({ c, surah }) {
         </Text>
       </View>
       <Text style={[styles.sAr, { color: c.accent }]}>{surah.suraNameFormatted || surah.name}</Text>
+    </Pressable>
+  );
+}
+
+function IndexRow({ c, kind, item }) {
+  const label = kind === 'juz' ? 'جوزء' : kind === 'hizb' ? 'حزب' : 'پەڕە';
+  const surah = getSurah(item.surah);
+  return (
+    <Pressable style={[styles.srow, { borderBottomColor: c.line }]} onPress={() => router.push('/reader/' + item.surah)}>
+      <View style={styles.numWrap}>
+        <Ionicons name="ellipse" size={38} color={c.accentSoft} style={{ position: 'absolute' }} />
+        <Text style={[styles.num, { color: c.accent }]}>{toArabicDigits(item.number)}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.sName, { color: c.ink }]}>{label} {toArabicDigits(item.number)}</Text>
+        <Text style={[styles.sMeta, { color: c.muted }]}>دەستپێک: {surah?.name}</Text>
+      </View>
+      <Text style={[styles.sAr, { color: c.accent }]}>{surah?.suraNameFormatted || surah?.name}</Text>
     </Pressable>
   );
 }

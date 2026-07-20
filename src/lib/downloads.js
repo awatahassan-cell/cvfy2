@@ -2,6 +2,8 @@
 import * as FileSystem from 'expo-file-system';
 import { recitationUrl } from './reciters';
 
+// documentDirectory is null in web browsers — downloads only work in the app.
+export const DOWNLOADS_SUPPORTED = !!FileSystem.documentDirectory;
 const DIR = (FileSystem.documentDirectory || '') + 'audio/';
 const pad = (n) => String(n).padStart(3, '0');
 

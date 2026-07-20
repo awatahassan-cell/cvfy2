@@ -64,7 +64,31 @@ export function getJuzList() {
   const list = [];
   for (let j = 1; j <= 30; j++) {
     const first = AYAHS.find((a) => a.juz === j);
-    list.push({ number: j, firstSurah: first ? getSurah(first.surah) : null, page: first ? first.page : null });
+    list.push({ number: j, surah: first ? first.surah : 1, firstSurah: first ? getSurah(first.surah) : null, page: first ? first.page : null });
+  }
+  return list;
+}
+
+// First surah of each mushaf page (1..604), for the "Page" tab.
+export function getPageList() {
+  const firstSurahOnPage = {};
+  for (const a of AYAHS) {
+    if (firstSurahOnPage[a.page] === undefined) firstSurahOnPage[a.page] = a.surah;
+  }
+  const list = [];
+  for (let pg = 1; pg <= 604; pg++) {
+    if (firstSurahOnPage[pg] !== undefined) list.push({ number: pg, surah: firstSurahOnPage[pg] });
+  }
+  return list;
+}
+
+// 60 hizb, approximated as two halves of each juz.
+export function getHizbList() {
+  const juz = getJuzList();
+  const list = [];
+  for (let h = 1; h <= 60; h++) {
+    const j = juz[Math.ceil(h / 2) - 1];
+    list.push({ number: h, surah: j ? j.surah : 1 });
   }
   return list;
 }
