@@ -45,6 +45,14 @@ function glueMarks(segments) {
   return out;
 }
 
+// The tajweed library encodes sukoon as U+0652, whose glyph is a round circle.
+// The printed Uthmani mushaf — and quran.json itself — use U+06E1, the
+// non-round "head" sukoon. Normalize so the reader always shows the non-round
+// sukoon, in both plain and tajweed modes, on any font/device.
+function normalizeSukoon(t) {
+  return (t || '').replace(/ْ/g, 'ۡ');
+}
+
 // Colored HTML for one ayah (tajweed on) or plain escaped text (tajweed off).
 // The browser shapes Arabic across adjacent <span> boundaries on its own, so we
 // add no joiner (a ZWJ would make the font draw a spurious kashida).
@@ -55,10 +63,12 @@ function ayahHtml(surah, ayahNumber, fallbackText, colored) {
   } catch (e) {
     segments = null;
   }
-  if (!segments || segments.length === 0) return esc(fallbackText || '');
-  if (!colored) return esc(segments.map((s) => s.text).join(''));
+  if (!segments || segments.length === 0) return esc(normalizeSukoon(fallbackText || ''));
 
-  return glueMarks(segments)
+  const norm = segments.map((s) => ({ ...s, text: normalizeSukoon(s.text) }));
+  if (!colored) return esc(norm.map((s) => s.text).join(''));
+
+  return glueMarks(norm)
     .map((seg) => {
       const col = resolveColor(seg.rules, TAJWEED_COLORS);
       const body = esc(seg.text);
