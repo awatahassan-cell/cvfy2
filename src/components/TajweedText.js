@@ -1,16 +1,24 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, Platform } from 'react-native';
 import { getAyahSegments, resolveColor, DEFAULT_TAJWEED_COLORS } from 'react-native-quran-tajweed';
 
-// Zero-Width Joiner. The tajweed data splits an ayah into colored runs that
-// often cut *inside* a word (e.g. "ٱ" | "للَّهِ"). Rendering each run as its own
-// <Text> makes the boundary letters shape in isolated form, so the word visually
-// falls apart. Inserting a ZWJ on both sides of every intra-word boundary makes
-// each run shape as if the word were continuous, preserving the connection while
-// still letting each run carry its own color.
+// The tajweed data splits an ayah into colored runs that often cut *inside* a
+// word (e.g. "ٱ" | "للَّهِ").
+//
+// On native (iOS/Android) React Native renders nested <Text> as one attributed
+// string, so the OS shapes the whole ayah together and the letters stay joined
+// on their own — no joiner is needed, and adding one makes the Uthmanic font
+// draw a visible kashida (ـ) between every word.
+//
+// On react-native-web each nested <Text> becomes an isolated <span>, which
+// breaks Arabic shaping at run boundaries. There a Zero-Width Joiner (U+200D,
+// invisible in browser fonts) on both sides of each intra-word boundary makes
+// the runs shape as if the word were continuous.
 const ZWJ = '‍';
+const USE_ZWJ = Platform.OS === 'web';
 
 function buildRuns(segments) {
+  if (!USE_ZWJ) return segments;
   const texts = segments.map((s) => s.text);
   // An intra-word boundary is one where neither side is whitespace.
   const joinAt = texts.map((t, i) =>
