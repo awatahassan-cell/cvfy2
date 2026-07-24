@@ -3,6 +3,7 @@ import { WebView } from 'react-native-webview';
 import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
 
 import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
+import { getQuranFont } from '../lib/quranFonts';
 import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
 
@@ -11,10 +12,9 @@ import { toArabicDigits } from '../lib/format';
 // colored runs tajweed needs, and it can't draw the font's ornate end-of-ayah
 // rosette; the browser engine does both correctly.
 //
-// KFGQPC Uthmanic HAFS font — a proper Uthmani mushaf script with the
-// traditional non-round (hook) sukoon — is used for both the ayah text and the
-// ornate rosette ayah number.
-const QURAN_FONT = "'UthmanicHafs', 'Noto Naskh Arabic', serif";
+// The ayah TEXT font is user-selectable (src/lib/quranFonts.js); the ayah
+// NUMBER always uses UthmanicHafs for its ornate rosette digit.
+const NUM_FONT = "'UthmanicHafs', serif";
 
 function esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -48,11 +48,18 @@ const ICON_BM = (col, on) =>
   `<svg viewBox="0 0 24 24" width="20" height="20" fill="${on ? col : 'none'}" stroke="${col}" stroke-width="1.6"><path d="M6 3.5h12a0 0 0 0 1 0 0v17l-6-4.2-6 4.2v-17a0 0 0 0 1 0 0z"/></svg>`;
 
 function buildDocument({
-  surah, ayahs, colors, scale, tajweed, bannerText, basmala,
+  surah, ayahs, colors, scale, tajweed, font, bannerText, basmala,
   showTafsir, tafsirMap, tafsirName, tafsirLtr, bookmarks, initialAyah,
 }) {
   const c = colors;
   const fontSize = Math.round(26 * scale);
+  const TEXT_FONT = `'${font.family}', 'Noto Naskh Arabic', serif`;
+  // The chosen text font plus UthmanicHafs (for the rosette number). Skip the
+  // duplicate @font-face when the chosen font already is UthmanicHafs.
+  const textFace =
+    font.family === 'UthmanicHafs'
+      ? ''
+      : `@font-face { font-family: '${font.family}'; src: url(data:font/ttf;base64,${font.b64}) format('${font.fmt}'); font-display: block; }`;
   const bmSet = new Set(bookmarks || []);
   const cards = ayahs
     .map((a) => {
@@ -88,16 +95,17 @@ function buildDocument({
     src: url(data:font/ttf;base64,${UTHMANIC_FONT_BASE64}) format('truetype');
     font-display: block;
   }
+  ${textFace}
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: ${c.bg}; }
   body { padding: 16px 16px 200px; }
   .banner {
     border: 1.5px solid ${c.accent}; border-radius: 10px; padding: 12px;
-    text-align: center; color: ${c.accent}; font-family: ${QURAN_FONT};
+    text-align: center; color: ${c.accent}; font-family: ${TEXT_FONT};
     font-size: 26px; margin-bottom: 10px; background: ${c.card};
   }
   .basmala {
-    text-align: center; color: ${c.ink}; font-family: ${QURAN_FONT};
+    text-align: center; color: ${c.ink}; font-family: ${TEXT_FONT};
     font-size: ${Math.round(22 * scale)}px; margin-bottom: 14px;
   }
   .card {
@@ -109,12 +117,12 @@ function buildDocument({
   .top { display: flex; justify-content: flex-start; align-items: center; gap: 16px; margin-bottom: 8px; }
   .ic { display: inline-flex; cursor: pointer; }
   .ayah {
-    font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
+    font-family: ${TEXT_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
   /* Ayah number: the Uthmani font draws the bare numeral inside its rosette. */
   .end {
-    font-family: ${QURAN_FONT}; color: ${c.accent};
+    font-family: ${NUM_FONT}; color: ${c.accent};
     font-size: ${fontSize}px; margin: 0 6px; white-space: nowrap;
   }
   .taf {
@@ -170,6 +178,7 @@ export default function TajweedWebView({
   colors,
   scale = 1,
   tajweed = true,
+  fontId,
   bannerText,
   basmala,
   showTafsir,
@@ -185,16 +194,17 @@ export default function TajweedWebView({
   const ref = useRef(null);
   const topAyahRef = useRef(0);
 
+  const font = getQuranFont(fontId);
   const bookmarksKey = (bookmarks || []).join(',');
   const html = useMemo(
     () =>
       buildDocument({
-        surah, ayahs, colors, scale, tajweed, bannerText, basmala,
+        surah, ayahs, colors, scale, tajweed, font, bannerText, basmala,
         showTafsir, tafsirMap, tafsirName, tafsirLtr,
         bookmarks, initialAyah: topAyahRef.current,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [surah, ayahs, colors, scale, tajweed, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr, bookmarksKey]
+    [surah, ayahs, colors, scale, tajweed, font.id, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr, bookmarksKey]
   );
 
   // Push active-ayah highlight + auto-scroll into the page.

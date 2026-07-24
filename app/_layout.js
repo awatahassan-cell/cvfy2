@@ -45,6 +45,7 @@ function ThemedStack() {
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     UthmanicHafs: require('../assets/fonts/UthmanicHafs.ttf'),
+    AmiriQuran: require('../assets/fonts/AmiriQuran.ttf'),
     NotoNaskhArabic: require('../assets/fonts/NotoNaskhArabic.ttf'),
     NotoKufiArabic: require('../assets/fonts/NotoKufiArabic.ttf'),
     Vazirmatn: require('../assets/fonts/Vazirmatn.ttf'),

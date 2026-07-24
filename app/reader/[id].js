@@ -13,6 +13,7 @@ import MiniPlayer from '../../src/components/MiniPlayer';
 import Glass from '../../src/components/Glass';
 import TajweedText from '../../src/components/TajweedText';
 import TajweedWebView from '../../src/components/TajweedWebView';
+import { QURAN_FONTS } from '../../src/lib/quranFonts';
 import { useDownloads } from '../../src/store/DownloadsContext';
 
 // On native, colored tajweed runs break Arabic shaping in RN's text engine, so
@@ -28,7 +29,7 @@ export default function Reader() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, themeId, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
+  const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, themeId, quranFontId, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
   const scale = fontScale || 1;
   const { playSurah, playAyah: playAyahAudio, current, currentAyah, mode, position, duration, isPlaying } = usePlayer();
   const { isDownloaded, download, remove, progressFor } = useDownloads();
@@ -142,6 +143,8 @@ export default function Reader() {
         showTafsir={showTafsir}
         isDark={theme.dark}
         scale={scale}
+        quranFontId={quranFontId}
+        onSelectFont={(id) => update({ quranFontId: id })}
         downloaded={isDownloaded(reciterId, surahNumber)}
         downloadProgress={progressFor(reciterId, surahNumber)}
         onToggleTajweed={() => update({ tajweed: !tajweed })}
@@ -159,6 +162,7 @@ export default function Reader() {
           colors={c}
           scale={scale}
           tajweed={tajweed}
+          fontId={quranFontId}
           bannerText={surah?.suraNameFormatted || surah?.name}
           basmala={showStandaloneBasmala ? BASMALA : ''}
           showTafsir={showTafsir}
@@ -227,9 +231,9 @@ export default function Reader() {
 // Left-side drawer with the reading options (replaces the crowded header buttons).
 function ReaderSettingsSheet({
   visible, onClose, c, insets,
-  tajweed, showTafsir, isDark, scale,
+  tajweed, showTafsir, isDark, scale, quranFontId,
   downloaded, downloadProgress,
-  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onDownload, onRemoveDownload,
+  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onSelectFont, onDownload, onRemoveDownload,
 }) {
   const downloading = downloadProgress != null;
   const W = Math.min(340, Dimensions.get('window').width * 0.84);
@@ -271,6 +275,29 @@ function ReaderSettingsSheet({
           <ToggleRow c={c} icon="color-palette-outline" label="تەجوید (ڕەنگکردنی ئەحکام)" value={tajweed} onToggle={onToggleTajweed} />
           <ToggleRow c={c} icon="document-text-outline" label="پیشاندانی تەفسیر" value={showTafsir} onToggle={onToggleTafsir} />
           <ToggleRow c={c} icon={isDark ? 'moon' : 'sunny-outline'} label="دۆخی تاریک" value={isDark} onToggle={onToggleDark} />
+
+          {/* Quran font picker */}
+          <View style={[styles.sheetRow, { borderColor: c.line, flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+            <View style={styles.sheetRowLeft}>
+              <Ionicons name="reader-outline" size={20} color={c.accent} />
+              <Text style={[styles.sheetLabel, { color: c.ink }]}>فۆنتی قورئان</Text>
+            </View>
+            <View style={{ gap: 6 }}>
+              {QURAN_FONTS.map((f) => {
+                const on = quranFontId === f.id;
+                return (
+                  <Pressable
+                    key={f.id}
+                    onPress={() => onSelectFont(f.id)}
+                    style={[styles.fontOpt, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : 'transparent' }]}
+                  >
+                    <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={18} color={on ? c.accent : c.muted} />
+                    <Text style={{ color: c.ink, fontSize: 13, fontWeight: on ? '700' : '500', textAlign: 'right', flex: 1 }}>{f.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
           {/* Font size */}
           <View style={[styles.sheetRow, { borderColor: c.line }]}>
@@ -427,4 +454,5 @@ const styles = StyleSheet.create({
   switch: { width: 44, height: 26, borderRadius: 100, padding: 3, flexDirection: 'row', justifyContent: 'flex-end' },
   knob: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff' },
   stepBtn: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  fontOpt: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12 },
 });

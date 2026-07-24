@@ -10,6 +10,7 @@ const defaults = {
   tafsirId: 'asan',
   showTafsir: true,
   tajweed: false,
+  quranFontId: 'amiri', // ayah text font — see src/lib/quranFonts.js
   fontScale: 1,
   reciterId: 'peshawa',
   language: 'ku', // 'ku' | 'ar' | 'en'
