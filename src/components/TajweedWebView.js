@@ -3,7 +3,6 @@ import { WebView } from 'react-native-webview';
 import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
 
 import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
-import { UTHMAN_TAHA_BASE64 } from '../lib/uthmanTahaBase64';
 import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
 
@@ -12,11 +11,10 @@ import { toArabicDigits } from '../lib/format';
 // colored runs tajweed needs, and it can't draw the font's ornate end-of-ayah
 // rosette; the browser engine does both correctly.
 //
-// Ayah text: KFGQPC Uthman Taha Naskh — the exact calligraphy of the printed
-// Madinah mushaf. Ayah number: the Uthmani HAFS font, which draws the bare
-// numeral inside its ornate rosette (Uthman Taha renders plain digits).
-const QURAN_FONT = "'UthmanTaha', 'Noto Naskh Arabic', serif";
-const NUM_FONT = "'UthmanicHafs', serif";
+// KFGQPC Uthmanic HAFS font — a proper Uthmani mushaf script with the
+// traditional non-round (hook) sukoon — is used for both the ayah text and the
+// ornate rosette ayah number.
+const QURAN_FONT = "'UthmanicHafs', 'Noto Naskh Arabic', serif";
 
 function esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -86,11 +84,6 @@ function buildDocument({
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <style>
   @font-face {
-    font-family: 'UthmanTaha';
-    src: url(data:font/woff2;base64,${UTHMAN_TAHA_BASE64}) format('woff2');
-    font-display: block;
-  }
-  @font-face {
     font-family: 'UthmanicHafs';
     src: url(data:font/ttf;base64,${UTHMANIC_FONT_BASE64}) format('truetype');
     font-display: block;
@@ -119,9 +112,9 @@ function buildDocument({
     font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Ayah number: the HAFS font draws the bare numeral inside its ornate rosette. */
+  /* Ayah number: the Uthmani font draws the bare numeral inside its rosette. */
   .end {
-    font-family: ${NUM_FONT}; color: ${c.accent};
+    font-family: ${QURAN_FONT}; color: ${c.accent};
     font-size: ${fontSize}px; margin: 0 6px; white-space: nowrap;
   }
   .taf {
