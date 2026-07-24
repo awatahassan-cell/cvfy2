@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -12,7 +12,13 @@ import { toArabicDigits } from '../../src/lib/format';
 import MiniPlayer from '../../src/components/MiniPlayer';
 import Glass from '../../src/components/Glass';
 import TajweedText from '../../src/components/TajweedText';
+import TajweedWebView from '../../src/components/TajweedWebView';
 import { useDownloads } from '../../src/store/DownloadsContext';
+
+// On native, colored tajweed runs break Arabic shaping in RN's text engine, so
+// we render the whole surah through a WebView (browser engine shapes correctly).
+// react-native-web already renders the spans correctly, so keep the RN path there.
+const WEBVIEW_TAJWEED = Platform.OS !== 'web';
 
 const BASMALA = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 
@@ -82,8 +88,10 @@ export default function Reader() {
     const ayahNumber = ayahs[index]?.ayah ?? index + 1;
     playAyahAudio(surahNumber, ayahNumber, reciterId, ayahs.length);
   };
+  const playAyahByNumber = (ayahNumber) => playAyahAudio(surahNumber, ayahNumber, reciterId, ayahs.length);
 
   const showStandaloneBasmala = surahNumber !== 1 && surahNumber !== 9;
+  const useWebTajweed = tajweed && WEBVIEW_TAJWEED;
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
@@ -127,6 +135,23 @@ export default function Reader() {
         </View>
       </View>
 
+      {useWebTajweed ? (
+        <TajweedWebView
+          surah={surahNumber}
+          ayahs={ayahs}
+          colors={c}
+          scale={scale}
+          bannerText={surah?.suraNameFormatted || surah?.name}
+          basmala={showStandaloneBasmala ? BASMALA : ''}
+          showTafsir={showTafsir}
+          tafsirMap={tafsirMap}
+          tafsirName={tafsirName}
+          tafsirLtr={tafsirOpt.dir === 'ltr'}
+          activeAyah={activeAyah}
+          playing={isPlaying}
+          onPlayAyah={playAyahByNumber}
+        />
+      ) : (
       <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 180 }}>
         {/* Surah banner */}
         <View style={[styles.banner, { borderColor: c.accent, backgroundColor: c.card }]}>
@@ -171,6 +196,7 @@ export default function Reader() {
           </View>
         )}
       </ScrollView>
+      )}
 
       {/* Small audio bar — stays on this page, no navigation */}
       <MiniPlayer bottom={insets.bottom + 10} />
