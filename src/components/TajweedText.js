@@ -49,10 +49,9 @@ export default function TajweedText({ surah, ayah, fontSize = 26, color, style, 
     style,
   ];
 
-  // Ornate end-of-ayah rosette: the Uthmani font renders the number itself as
-  // the enclosed marker, so we pass just the number (no ۝ prefix).
+  // Ayah number framed by ornate parentheses (﴾ ﴿) — a font-independent marker.
   const mark = endMark ? (
-    <Text style={{ color: endColor || color, fontSize: fontSize * 1.15 }}>{`  ${endMark}`}</Text>
+    <Text style={{ color: endColor || color, fontSize: fontSize * 1.05 }}>{`  ﴾${endMark}﴿`}</Text>
   ) : null;
 
   if (!segments || segments.length === 0) {

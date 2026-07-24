@@ -2,9 +2,12 @@ import React, { useMemo, useRef } from 'react';
 import { WebView } from 'react-native-webview';
 import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
 
-import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
 import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
+
+// Match the plain (non-tajweed) reader, which renders with the device's Arabic
+// font. Using the same system font here keeps both modes visually identical.
+const QURAN_FONT = "'Noto Naskh Arabic', 'Traditional Arabic', serif";
 
 // Render a whole surah's tajweed text inside a single WebView.
 //
@@ -52,7 +55,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
           ? `<div class="taf ${tafsirLtr ? 'ltr' : ''}"><div class="tafname">${esc(tafsirName)}</div>${esc(tafsirMap[a.ayah])}</div>`
           : '';
       return `<div class="card" data-n="${a.ayah}" onclick="pick(${a.ayah})">
-        <div class="ayah">${html}<span class="end">${num}</span></div>
+        <div class="ayah">${html}<span class="end">﴾${num}﴿</span></div>
         ${taf}
       </div>`;
     })
@@ -69,24 +72,16 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <style>
-  @font-face {
-    font-family: 'UthmanicHafs';
-    /* The file is TrueType-flavoured (sfnt 0x00010000) despite the .otf name;
-       Android WebView rejects a mismatched format() hint and falls back to the
-       system font, so declare 'truetype' with a ttf mime. */
-    src: url(data:font/ttf;base64,${UTHMANIC_FONT_BASE64}) format('truetype');
-    font-display: block;
-  }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: ${c.bg}; }
   body { padding: 16px 16px 200px; }
   .banner {
     border: 1.5px solid ${c.accent}; border-radius: 10px; padding: 12px;
-    text-align: center; color: ${c.accent}; font-family: 'UthmanicHafs';
+    text-align: center; color: ${c.accent}; font-family: ${QURAN_FONT};
     font-size: 26px; margin-bottom: 10px; background: ${c.card};
   }
   .basmala {
-    text-align: center; color: ${c.ink}; font-family: 'UthmanicHafs';
+    text-align: center; color: ${c.ink}; font-family: ${QURAN_FONT};
     font-size: ${Math.round(22 * scale)}px; margin-bottom: 14px;
   }
   .card {
@@ -96,15 +91,14 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
   }
   .card.active { background: ${c.accentSoft}; border-color: ${c.accent}; }
   .ayah {
-    font-family: 'UthmanicHafs'; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
+    font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Authentic mushaf end-of-ayah rosette: the Uthmani font renders the ayah
-     number itself as the ornate enclosed marker, so no ۝ prefix is needed
-     (adding it would draw a second, empty rosette). */
+  /* Ayah number framed by ornate parentheses (﴾ ﴿) — a font-independent marker
+     that renders the same in both the plain and tajweed renderers. */
   .end {
-    font-family: 'UthmanicHafs'; color: ${c.accent};
-    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 5px;
+    font-family: ${QURAN_FONT}; color: ${c.accent};
+    font-size: ${Math.round(fontSize * 1.05)}px; margin: 0 5px; white-space: nowrap;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
