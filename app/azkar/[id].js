@@ -1,14 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 
 import { useTheme } from '../../src/store/SettingsContext';
 import { getDhikrCategory, getDhikrByCategory } from '../../src/lib/religious';
+import { azkarAudioUrl } from '../../src/lib/azkarAudio';
 import { toArabicDigits } from '../../src/lib/format';
+
+// Only one dhikr may play at a time — a new tap stops whatever is playing.
+let stopActive = null;
 
 export default function AzkarDetail() {
   const { id } = useLocalSearchParams();
@@ -19,6 +24,12 @@ export default function AzkarDetail() {
 
   const category = getDhikrCategory(catId);
   const items = useMemo(() => getDhikrByCategory(catId), [catId]);
+
+  // Allow audio to play even when the device is on silent (iOS).
+  useEffect(() => {
+    Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false }).catch(() => {});
+    return () => { if (stopActive) stopActive(); };
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
@@ -44,24 +55,67 @@ export default function AzkarDetail() {
 function DhikrCard({ c, item, index }) {
   const target = item.count || 1;
   const [done, setDone] = useState(0);
-  const [speaking, setSpeaking] = useState(false);
+  const [state, setState] = useState('idle'); // idle | loading | playing
   const complete = done >= target;
 
-  useEffect(() => () => Speech.stop(), []);
+  const soundRef = useRef(null);
+  const audioUrl = azkarAudioUrl(item.id);
 
-  const toggleSpeak = () => {
-    if (speaking) {
-      Speech.stop();
-      setSpeaking(false);
-      return;
+  const cleanup = async () => {
+    if (soundRef.current) {
+      const s = soundRef.current;
+      soundRef.current = null;
+      await s.unloadAsync().catch(() => {});
     }
-    setSpeaking(true);
+  };
+
+  useEffect(() => () => { cleanup(); Speech.stop(); }, []);
+
+  const stopThis = async () => {
+    await cleanup();
+    Speech.stop();
+    setState('idle');
+    if (stopActive === stopThis) stopActive = null;
+  };
+
+  const play = async () => {
+    if (state !== 'idle') { stopThis(); return; }
+
+    // Stop any other dhikr currently playing.
+    if (stopActive && stopActive !== stopThis) { try { await stopActive(); } catch (e) {} }
+    stopActive = stopThis;
+
+    // Prefer the real recorded recitation; fall back to device TTS.
+    if (audioUrl) {
+      setState('loading');
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: audioUrl },
+          { shouldPlay: true },
+          (s) => {
+            if (!s.isLoaded) return;
+            if (s.didJustFinish) stopThis();
+          }
+        );
+        soundRef.current = sound;
+        setState('playing');
+      } catch (e) {
+        // Network/host issue → fall back to TTS.
+        speak();
+      }
+    } else {
+      speak();
+    }
+  };
+
+  const speak = () => {
+    setState('playing');
     Speech.speak(item.arabic, {
       language: 'ar',
       rate: 0.8,
-      onDone: () => setSpeaking(false),
-      onStopped: () => setSpeaking(false),
-      onError: () => setSpeaking(false),
+      onDone: () => stopThis(),
+      onStopped: () => setState('idle'),
+      onError: () => setState('idle'),
     });
   };
 
@@ -73,8 +127,12 @@ function DhikrCard({ c, item, index }) {
         </View>
         <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
           {target > 1 && <Text style={{ color: c.muted, fontSize: 12 }}>جار: {toArabicDigits(target)}</Text>}
-          <Pressable hitSlop={8} onPress={toggleSpeak}>
-            <Ionicons name={speaking ? 'stop-circle' : 'volume-high'} size={22} color={c.accent} />
+          <Pressable hitSlop={8} onPress={play} style={[styles.playBtn, { backgroundColor: c.accentSoft }]}>
+            {state === 'loading' ? (
+              <ActivityIndicator size="small" color={c.accent} />
+            ) : (
+              <Ionicons name={state === 'playing' ? 'stop' : 'play'} size={16} color={c.accent} />
+            )}
           </Pressable>
         </View>
       </View>
@@ -105,6 +163,7 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
   cardTop: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   idx: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  playBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   arabic: { fontFamily: 'UthmanicHafs', fontSize: 24, lineHeight: 50, textAlign: 'right', writingDirection: 'rtl' },
   kurdish: { fontSize: 14, lineHeight: 26, textAlign: 'right', marginTop: 10, writingDirection: 'rtl' },
   counter: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 11, borderRadius: 12, marginTop: 14 },
