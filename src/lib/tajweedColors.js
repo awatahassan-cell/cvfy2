@@ -14,21 +14,21 @@
 // page look washed-out gray before.
 export const TAJWEED_COLORS = {
   // Orange — ghunnah (nasalization of نّ / مّ)
-  ghunnah: '#E8730C',
+  ghunnah: '#FF7A00',
 
   // Red — ikhfa'a (hiding)
-  ikhafa: '#D32F2F',
-  ikhafa_shafawi: '#D32F2F',
+  ikhafa: '#F5261F',
+  ikhafa_shafawi: '#F5261F',
 
   // Purple — idgham with ghunna (merging)
-  idgham_ghunnah: '#B54BC8',
-  idgham_shafawi: '#B54BC8',
+  idgham_ghunnah: '#C93FE0',
+  idgham_shafawi: '#C93FE0',
 
   // Blue — iqlab (flipping noon into meem)
-  iqlab: '#1E88E5',
+  iqlab: '#1E90FF',
 
   // Green — qalqala (echoing: ق ط ب ج د with sukoon)
-  qalaqah: '#2E9E3E',
+  qalaqah: '#12B000',
 
   // Gray — merged / silent (not pronounced distinctly)
   idgham_wo_ghunnah: '#9E9E9E',
