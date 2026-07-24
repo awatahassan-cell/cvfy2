@@ -355,9 +355,9 @@ function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir,
         {tajweed ? (
           <TajweedText surah={surah} ayah={ayah.ayah} fontSize={26 * scale} color={c.ink} fallbackText={ayah.text} endMark={toArabicDigits(ayah.ayah)} endColor={c.accent} />
         ) : (
-          <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 54 * scale }]}>
+          <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 52 * scale }]}>
             {ayah.text}{'  '}
-            <Text style={{ color: c.accent, fontSize: 26 * scale, fontFamily: 'UthmanicHafs' }}>{toArabicDigits(ayah.ayah)}</Text>
+            <Text style={{ color: c.accent, fontSize: 26 * scale }}>{toArabicDigits(ayah.ayah)}</Text>
           </Text>
         )}
       </Pressable>
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
   cardTop: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   mini: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  arLine: { fontFamily: 'AmiriQuran', fontSize: 26, lineHeight: 54, textAlign: 'right', writingDirection: 'rtl' },
+  arLine: { fontFamily: 'UthmanicHafs', fontSize: 26, lineHeight: 52, textAlign: 'right', writingDirection: 'rtl' },
   tafBox: { marginTop: 12, paddingTop: 10, borderTopWidth: 1 },
   tafText: { fontSize: 14, lineHeight: 26, textAlign: 'right', writingDirection: 'rtl' },
   pageFrame: { borderWidth: 2, borderRadius: 12, padding: 16, minHeight: 400 },

@@ -3,7 +3,6 @@ import { WebView } from 'react-native-webview';
 import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
 
 import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
-import { AMIRI_QURAN_BASE64 } from '../lib/amiriQuranBase64';
 import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
 
@@ -12,12 +11,9 @@ import { toArabicDigits } from '../lib/format';
 // colored runs tajweed needs, and it can't draw the font's ornate end-of-ayah
 // rosette; the browser engine does both correctly. Using the WebView for both
 // modes keeps the font and the ayah-number ornament identical whether tajweed
-// coloring is on or off.
-//
-// Ayah text: Amiri Quran (traditional non-round "hook" sukoon). Ayah number:
-// the Uthmani font, which draws the bare numeral inside its ornate rosette.
-const QURAN_FONT = "'AmiriQuran', 'Noto Naskh Arabic', serif";
-const NUM_FONT = "'UthmanicHafs', serif";
+// coloring is on or off. The official KFGQPC Uthmani mushaf font is used for
+// both the ayah text and the ornate rosette ayah number.
+const QURAN_FONT = "'UthmanicHafs', 'Noto Naskh Arabic', serif";
 
 function esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -87,11 +83,6 @@ function buildDocument({
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <style>
   @font-face {
-    font-family: 'AmiriQuran';
-    src: url(data:font/ttf;base64,${AMIRI_QURAN_BASE64}) format('truetype');
-    font-display: block;
-  }
-  @font-face {
     font-family: 'UthmanicHafs';
     src: url(data:font/ttf;base64,${UTHMANIC_FONT_BASE64}) format('truetype');
     font-display: block;
@@ -123,7 +114,7 @@ function buildDocument({
   /* Authentic mushaf ayah marker: the Uthmani font renders the bare number
      inside its ornate circular rosette. */
   .end {
-    font-family: ${NUM_FONT}; color: ${c.accent};
+    font-family: ${QURAN_FONT}; color: ${c.accent};
     font-size: ${fontSize}px; margin: 0 6px; white-space: nowrap;
   }
   .taf {
