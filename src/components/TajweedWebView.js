@@ -13,14 +13,14 @@ import { toArabicDigits } from '../lib/format';
 // so the text stays connected AND colored. We use one WebView for the whole
 // surah (a per-ayah WebView would mean hundreds of instances).
 
-const ZWJ = '‍';
-
 function esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Build the colored HTML for one ayah, inserting a Zero-Width Joiner at every
-// intra-word boundary so the browser keeps the cursive connection (invisible).
+// Build the colored HTML for one ayah. The browser engine shapes Arabic across
+// adjacent <span> boundaries on its own (color does not break shaping), so we
+// must NOT insert any joiner — a Zero-Width Joiner here makes this font draw a
+// spurious kashida (ـ) at each colored boundary.
 function ayahHtml(surah, ayahNumber, fallbackText) {
   let segments = null;
   try {
@@ -30,17 +30,10 @@ function ayahHtml(surah, ayahNumber, fallbackText) {
   }
   if (!segments || segments.length === 0) return esc(fallbackText || '');
 
-  const texts = segments.map((s) => s.text);
-  const joinAt = texts.map(
-    (t, i) => i < texts.length - 1 && !/\s$/.test(t) && !/^\s/.test(texts[i + 1])
-  );
   return segments
-    .map((seg, i) => {
-      let t = seg.text;
-      if (i > 0 && joinAt[i - 1]) t = ZWJ + t;
-      if (joinAt[i]) t = t + ZWJ;
+    .map((seg) => {
       const col = resolveColor(seg.rules, DEFAULT_TAJWEED_COLORS);
-      const body = esc(t);
+      const body = esc(seg.text);
       return col ? `<span style="color:${col}">${body}</span>` : body;
     })
     .join('');
