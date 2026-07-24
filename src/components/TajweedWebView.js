@@ -110,11 +110,11 @@ function buildDocument({
     font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Authentic end-of-ayah rosette: the Uthmani font draws the number inside an
-     ornate marker. */
+  /* Plain ayah number in the Uthmani font (font-variant:none suppresses the
+     font's decorative rosette), matching the reference screenshot. */
   .end {
-    font-family: ${QURAN_FONT}; color: ${c.accent};
-    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 8px;
+    font-family: ${QURAN_FONT}; color: ${c.accent}; font-variant: none;
+    font-size: ${Math.round(fontSize * 1.05)}px; margin: 0 10px; white-space: nowrap;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
