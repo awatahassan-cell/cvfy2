@@ -2,12 +2,16 @@ import React, { useMemo, useRef } from 'react';
 import { WebView } from 'react-native-webview';
 import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
 
+import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
 import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
 
-// Match the plain (non-tajweed) reader, which renders with the device's Arabic
-// font. Using the same system font here keeps both modes visually identical.
-const QURAN_FONT = "'Noto Naskh Arabic', 'Traditional Arabic', serif";
+// Same Uthmani font the plain reader uses, so both modes look identical.
+const QURAN_FONT = "'UthmanicHafs', 'Noto Naskh Arabic', serif";
+// The ayah-number marker uses a plain Arabic font so the digit stays a normal
+// numeral inside the ﴾ ﴿ frame (the Uthmani font would draw it as a rosette,
+// which nested inside the frame looks busy).
+const NUM_FONT = "'Noto Naskh Arabic', 'Traditional Arabic', serif";
 
 // Render a whole surah's tajweed text inside a single WebView.
 //
@@ -72,6 +76,11 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <style>
+  @font-face {
+    font-family: 'UthmanicHafs';
+    src: url(data:font/ttf;base64,${UTHMANIC_FONT_BASE64}) format('truetype');
+    font-display: block;
+  }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: ${c.bg}; }
   body { padding: 16px 16px 200px; }
@@ -97,8 +106,8 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
   /* Ayah number framed by ornate parentheses (﴾ ﴿) — a font-independent marker
      that renders the same in both the plain and tajweed renderers. */
   .end {
-    font-family: ${QURAN_FONT}; color: ${c.accent};
-    font-size: ${Math.round(fontSize * 1.05)}px; margin: 0 5px; white-space: nowrap;
+    font-family: ${NUM_FONT}; color: ${c.accent};
+    font-size: ${Math.round(fontSize * 0.95)}px; margin: 0 5px; white-space: nowrap;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
