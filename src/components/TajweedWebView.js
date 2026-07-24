@@ -72,9 +72,7 @@ function ayahHtml(surah, ayahNumber, fallbackText, colored) {
     .map((seg) => {
       const col = resolveColor(seg.rules, TAJWEED_COLORS);
       const body = esc(seg.text);
-      // Bold the coloured letters so the sparse tajweed marks actually stand
-      // out against the black text instead of washing out.
-      return col ? `<span style="color:${col};font-weight:700">${body}</span>` : body;
+      return col ? `<span style="color:${col}">${body}</span>` : body;
     })
     .join('');
 }

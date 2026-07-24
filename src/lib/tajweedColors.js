@@ -1,48 +1,42 @@
-// Tajweed colours matched to the iQuran Lite scheme (the reference the user
-// uses). These are the standard six noon/meem-sakin + qalqala rules, each with
-// its own vivid colour so the page reads as a proper colour-coded mushaf:
+// Tajweed colours matched to quran.com's scheme (quran.com/al-ikhlas). Unlike
+// the sparse noon-rule schemes, quran.com colours every madd type and tafkhim,
+// so the page reads as densely colour-coded:
 //
-//   Ghunna (نّ / مّ) .................. Orange
-//   Ikhfa'a ........................... Red
-//   Idgham (with ghunna) .............. Purple
-//   Idgham without ghunna ............. Gray
-//   Iqlab ............................. Blue
-//   Qalqala ........................... Green
-//
-// Natural madd, tafkhim and hamzat-wasl are left as ink (black) exactly like
-// iQuran Lite — colouring the ever-present hamzat-wasl gray was what made the
-// page look washed-out gray before.
+//   Silent letter ............ Gray
+//   Normal madd (2) .......... Gold
+//   Separated madd (2/4/6) ... Orange   (madd munfasil)
+//   Connected madd (4/5) ..... Red      (madd muttasil)
+//   Necessary madd (6) ....... Dark red (madd lazim)
+//   Ghunna / ikhfa' .......... Green
+//   Qalqala .................. Light blue
+//   Tafkhim (heavy) .......... Blue
 export const TAJWEED_COLORS = {
-  // Orange — ghunnah (nasalization of نّ / مّ)
-  ghunnah: '#FF7A00',
+  // Madd — gold → orange → red → dark red, by strength
+  madda_normal: '#C9A100', // Normal madd (2) — gold
+  madda_permissible: '#FF8000', // Separated madd (2/4/6) — orange
+  madda_obligatory: '#EE0000', // Connected madd (4/5) — red
+  madda_necessary: '#8E0000', // Necessary madd (6) — dark red
 
-  // Red — ikhfa'a (hiding)
-  ikhafa: '#F5261F',
-  ikhafa_shafawi: '#F5261F',
+  // Green — ghunna / ikhfa (nasalization, incl. iqlab & idgham with ghunna)
+  ghunnah: '#009E00',
+  ikhafa: '#009E00',
+  ikhafa_shafawi: '#009E00',
+  idgham_ghunnah: '#009E00',
+  idgham_shafawi: '#009E00',
+  iqlab: '#009E00',
 
-  // Purple — idgham with ghunna (merging)
-  idgham_ghunnah: '#C93FE0',
-  idgham_shafawi: '#C93FE0',
+  // Light blue — qalqala (echo)
+  qalaqah: '#4FA8E8',
 
-  // Blue — iqlab (flipping noon into meem)
-  iqlab: '#1E90FF',
+  // Blue — tafkhim (heavy pronunciation)
+  tafkhim: '#2B2FD1',
+  tarqiq: null,
 
-  // Green — qalqala (echoing: ق ط ب ج د with sukoon)
-  qalaqah: '#12B000',
-
-  // Gray — merged / silent (not pronounced distinctly)
+  // Gray — silent / merged (not pronounced distinctly)
+  ham_wasl: '#9E9E9E',
+  laam_shamsiyah: '#9E9E9E',
+  slnt: '#9E9E9E',
   idgham_wo_ghunnah: '#9E9E9E',
   idgham_mutajanisayn: '#9E9E9E',
   idgham_mutaqaribayn: '#9E9E9E',
-  slnt: '#9E9E9E',
-
-  // Left as ink (black) to match iQuran Lite — not colour-coded there
-  madda_normal: null,
-  madda_permissible: null,
-  madda_obligatory: null,
-  madda_necessary: null,
-  tafkhim: null,
-  tarqiq: null,
-  ham_wasl: null,
-  laam_shamsiyah: null,
 };
