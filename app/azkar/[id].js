@@ -10,6 +10,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useTheme } from '../../src/store/SettingsContext';
 import { getDhikrCategory, getDhikrByCategory } from '../../src/lib/religious';
 import { azkarAudioUrl } from '../../src/lib/azkarAudio';
+import { azkarRepeat } from '../../src/lib/azkarRepeat';
 import { toArabicDigits } from '../../src/lib/format';
 
 // Only one dhikr may play at a time — a new tap stops whatever is playing.
@@ -53,7 +54,8 @@ export default function AzkarDetail() {
 }
 
 function DhikrCard({ c, item, index }) {
-  const target = item.count || 1;
+  // The bundled data ships count = 1 for everything; use the corrected repeat.
+  const target = azkarRepeat(item.id);
   const [done, setDone] = useState(0);
   const [state, setState] = useState('idle'); // idle | loading | playing
   const complete = done >= target;
