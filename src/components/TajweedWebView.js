@@ -66,7 +66,7 @@ function buildDocument({
           <span class="ic" onclick="pick(${a.ayah})">${ICON_PLAY(c.muted)}</span>
           <span class="ic bm" onclick="bm(${a.ayah})">${ICON_BM(on ? c.accent : c.muted, on)}</span>
         </div>
-        <div class="ayah" onclick="pick(${a.ayah})">${html}<span class="end">${num}</span></div>
+        <div class="ayah" onclick="pick(${a.ayah})">${html}<span class="end">﴾${num}﴿</span></div>
         ${taf}
       </div>`;
     })
@@ -110,11 +110,12 @@ function buildDocument({
     font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Plain ayah number in the Uthmani font (font-variant:none suppresses the
-     font's decorative rosette), matching the reference screenshot. */
+  /* Ayah number framed by the Uthmani font's ornate parentheses ﴾ ﴿.
+     font-variant:none keeps the digit a plain numeral (not the font's rosette)
+     so it sits cleanly inside the frame. */
   .end {
     font-family: ${QURAN_FONT}; color: ${c.accent}; font-variant: none;
-    font-size: ${Math.round(fontSize * 1.05)}px; margin: 0 10px; white-space: nowrap;
+    font-size: ${Math.round(fontSize * 1.05)}px; margin: 0 6px; white-space: nowrap;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
