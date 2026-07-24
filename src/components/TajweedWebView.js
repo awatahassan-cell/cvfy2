@@ -66,7 +66,7 @@ function buildDocument({
           <span class="ic" onclick="pick(${a.ayah})">${ICON_PLAY(c.muted)}</span>
           <span class="ic bm" onclick="bm(${a.ayah})">${ICON_BM(on ? c.accent : c.muted, on)}</span>
         </div>
-        <div class="ayah" onclick="pick(${a.ayah})">${html}<span class="end">﴾${num}﴿</span></div>
+        <div class="ayah" onclick="pick(${a.ayah})">${html}<span class="end">﴿${num}﴾</span></div>
         ${taf}
       </div>`;
     })
