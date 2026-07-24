@@ -36,7 +36,7 @@ function buildRuns(segments) {
 // Render one ayah with tajweed coloring, using only the package's *data*
 // helpers (getAyahSegments/resolveColor) — not its components — so we fully
 // control the Text nesting, font and letter-joining.
-export default function TajweedText({ surah, ayah, fontSize = 26, color, style, fallbackText }) {
+export default function TajweedText({ surah, ayah, fontSize = 26, color, style, fallbackText, endMark, endColor }) {
   let segments = null;
   try {
     segments = getAyahSegments(surah, ayah);
@@ -49,9 +49,14 @@ export default function TajweedText({ surah, ayah, fontSize = 26, color, style, 
     style,
   ];
 
+  // Ornate end-of-ayah rosette (۝ + number) drawn by the Uthmani font.
+  const mark = endMark ? (
+    <Text style={{ color: endColor || color, fontSize: fontSize * 1.15 }}>{` ۝${endMark}`}</Text>
+  ) : null;
+
   if (!segments || segments.length === 0) {
     // Fall back to plain text so the ayah is never blank.
-    return <Text style={base}>{fallbackText || ''}</Text>;
+    return <Text style={base}>{fallbackText || ''}{mark}</Text>;
   }
 
   const runs = buildRuns(segments);
@@ -66,6 +71,7 @@ export default function TajweedText({ surah, ayah, fontSize = 26, color, style, 
           </Text>
         );
       })}
+      {mark}
     </Text>
   );
 }

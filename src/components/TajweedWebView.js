@@ -40,7 +40,11 @@ function ayahHtml(surah, ayahNumber, fallbackText) {
     .join('');
 }
 
-function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr }) {
+// U+06DD ARABIC END OF AYAH — the Uthmani font renders this followed by the
+// Arabic-Indic ayah number as the ornate mushaf rosette with the number inside.
+const AYAH_MARK = '۝';
+
+function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr, initialAyah }) {
   const c = colors;
   const fontSize = Math.round(26 * scale);
   const cards = ayahs
@@ -52,7 +56,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
           ? `<div class="taf ${tafsirLtr ? 'ltr' : ''}"><div class="tafname">${esc(tafsirName)}</div>${esc(tafsirMap[a.ayah])}</div>`
           : '';
       return `<div class="card" data-n="${a.ayah}" onclick="pick(${a.ayah})">
-        <div class="ayah">${html}<span class="end"><span class="endn">${num}</span></span></div>
+        <div class="ayah">${html}<span class="end">${AYAH_MARK}${num}</span></div>
         ${taf}
       </div>`;
     })
@@ -99,23 +103,11 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     font-family: 'UthmanicHafs'; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Ornamental end-of-ayah marker (mushaf-style rosette) with the number inside. */
+  /* Authentic mushaf end-of-ayah rosette drawn by the Uthmani font (۝ + number). */
   .end {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: ${Math.round(fontSize * 1.25)}px; height: ${Math.round(fontSize * 1.25)}px;
-    margin: 0 6px; vertical-align: middle; position: relative;
-    color: ${c.accent};
+    font-family: 'UthmanicHafs'; color: ${c.accent};
+    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 4px;
   }
-  .end::before, .end::after {
-    content: ''; position: absolute; inset: 0; border-radius: 50%;
-    border: 1.5px solid ${c.accent};
-  }
-  .end::after { inset: ${Math.round(fontSize * 0.16)}px; border-width: 1px; opacity: .55; transform: rotate(45deg); border-radius: 40%; }
-  .endn {
-    font-family: -apple-system, system-ui, sans-serif; font-weight: 700;
-    font-size: ${Math.round(fontSize * 0.42)}px; line-height: 1; z-index: 1;
-  }
-  .card.active .end { color: ${c.accent}; }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
     color: ${c.muted}; font-size: ${Math.round(14 * scale)}px; line-height: ${Math.round(26 * scale)}px;
@@ -142,6 +134,21 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     var el = document.querySelector('.card[data-n="'+n+'"]');
     if(el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); }
   }
+  // Report the top-most visible ayah so RN can restore position after a rebuild
+  // (e.g. toggling tafsir or switching theme rebuilds this document).
+  function topAyah(){
+    var cards = document.querySelectorAll('.card');
+    for (var i=0;i<cards.length;i++){ if (cards[i].getBoundingClientRect().bottom > 90) return +cards[i].getAttribute('data-n'); }
+    return null;
+  }
+  var lastTop = 0;
+  window.addEventListener('scroll', function(){ var n=topAyah(); if(n && n!==lastTop){ lastTop=n; post({ type:'top', ayah:n }); } }, { passive:true });
+  // Restore the previous reading position instantly on (re)load.
+  var INITIAL_AYAH = ${initialAyah || 0};
+  if (INITIAL_AYAH){
+    var t = document.querySelector('.card[data-n="'+INITIAL_AYAH+'"]');
+    if (t){ t.scrollIntoView({ block:'start' }); window.scrollBy(0, -14); }
+  }
   document.fonts && document.fonts.ready.then(function(){ post({ type:'ready' }); });
 </script>
 </body>
@@ -164,6 +171,10 @@ export default function TajweedWebView({
   onPlayAyah,
 }) {
   const ref = useRef(null);
+  // Top-most visible ayah, kept up to date from the page's scroll events. Read
+  // (not depended on) when the document rebuilds, so a rebuild reopens at the
+  // same ayah instead of jumping back to the top.
+  const topAyahRef = useRef(0);
 
   // Rebuild the document only when content-affecting inputs change (not on every
   // active-ayah tick — highlighting is done by injecting JS instead).
@@ -180,7 +191,9 @@ export default function TajweedWebView({
         tafsirMap,
         tafsirName,
         tafsirLtr,
+        initialAyah: topAyahRef.current,
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [surah, ayahs, colors, scale, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr]
   );
 
@@ -197,6 +210,7 @@ export default function TajweedWebView({
     try {
       const msg = JSON.parse(e.nativeEvent.data);
       if (msg.type === 'play' && onPlayAyah) onPlayAyah(msg.ayah);
+      else if (msg.type === 'top' && msg.ayah) topAyahRef.current = msg.ayah;
     } catch (err) {}
   };
 

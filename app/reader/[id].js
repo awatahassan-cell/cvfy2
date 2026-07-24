@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Platform, Modal } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Platform, Modal, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -215,7 +215,7 @@ export default function Reader() {
   );
 }
 
-// Bottom-sheet with the reading options (replaces the crowded header buttons).
+// Left-side drawer with the reading options (replaces the crowded header buttons).
 function ReaderSettingsSheet({
   visible, onClose, c, insets,
   tajweed, showTafsir, isDark, scale,
@@ -223,53 +223,87 @@ function ReaderSettingsSheet({
   onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onDownload, onRemoveDownload,
 }) {
   const downloading = downloadProgress != null;
+  const W = Math.min(340, Dimensions.get('window').width * 0.84);
+  const p = useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = useState(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      Animated.timing(p, { toValue: 1, duration: 240, useNativeDriver: true }).start();
+    } else if (mounted) {
+      Animated.timing(p, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {
+        if (finished) setMounted(false);
+      });
+    }
+  }, [visible]);
+
+  if (!mounted) return null;
+
+  const translateX = p.interpolate({ inputRange: [0, 1], outputRange: [-W, 0] });
+  const backdropOpacity = p.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <View style={[styles.sheet, { backgroundColor: c.bg, paddingBottom: insets.bottom + 16 }]}>
-        <View style={[styles.sheetGrip, { backgroundColor: c.line }]} />
-        <Text style={[styles.sheetTitle, { color: c.ink }]}>ڕێکخستنی خوێندنەوە</Text>
-
-        <ToggleRow c={c} icon="color-palette-outline" label="تەجوید (ڕەنگکردنی ئەحکام)" value={tajweed} onToggle={onToggleTajweed} />
-        <ToggleRow c={c} icon="document-text-outline" label="پیشاندانی تەفسیر" value={showTafsir} onToggle={onToggleTafsir} />
-        <ToggleRow c={c} icon={isDark ? 'moon' : 'sunny-outline'} label="دۆخی تاریک" value={isDark} onToggle={onToggleDark} />
-
-        {/* Font size */}
-        <View style={[styles.sheetRow, { borderColor: c.line }]}>
-          <View style={styles.sheetRowLeft}>
-            <Ionicons name="text-outline" size={20} color={c.accent} />
-            <Text style={[styles.sheetLabel, { color: c.ink }]}>قەبارەی نووسین</Text>
-          </View>
-          <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 14 }}>
-            <Pressable hitSlop={8} onPress={() => onScale(-0.1)} style={[styles.stepBtn, { backgroundColor: c.accentSoft }]}>
-              <Ionicons name="remove" size={18} color={c.accent} />
-            </Pressable>
-            <Text style={{ color: c.ink, fontSize: 13, fontWeight: '700', minWidth: 40, textAlign: 'center' }}>
-              {Math.round(scale * 100)}٪
-            </Text>
-            <Pressable hitSlop={8} onPress={() => onScale(0.1)} style={[styles.stepBtn, { backgroundColor: c.accentSoft }]}>
-              <Ionicons name="add" size={18} color={c.accent} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Offline download */}
-        <Pressable
-          style={[styles.sheetRow, { borderColor: c.line }]}
-          onPress={() => (downloaded ? onRemoveDownload() : downloading ? null : onDownload())}
+    <Modal visible transparent animationType="none" onRequestClose={onClose}>
+      <View style={{ flex: 1, flexDirection: 'row' }}>
+        <Animated.View
+          style={[
+            styles.drawer,
+            { backgroundColor: c.bg, borderColor: c.line, width: W, paddingTop: insets.top + 18, paddingBottom: insets.bottom + 16, transform: [{ translateX }] },
+          ]}
         >
-          <View style={styles.sheetRowLeft}>
-            <Ionicons name={downloaded ? 'checkmark-circle' : 'download-outline'} size={20} color={c.accent} />
-            <Text style={[styles.sheetLabel, { color: c.ink }]}>
-              {downloaded ? 'داگیراوە بۆ بێ ئینتەرنێت' : 'داگرتن بۆ بێ ئینتەرنێت'}
-            </Text>
+          <View style={styles.drawerHead}>
+            <Text style={[styles.sheetTitle, { color: c.ink }]}>ڕێکخستنی خوێندنەوە</Text>
+            <Pressable hitSlop={10} onPress={onClose}>
+              <Ionicons name="close" size={22} color={c.muted} />
+            </Pressable>
           </View>
-          {downloading ? (
-            <Text style={{ color: c.accent, fontSize: 12, fontWeight: '800' }}>{Math.round(downloadProgress * 100)}٪</Text>
-          ) : (
-            <Ionicons name={downloaded ? 'trash-outline' : 'chevron-back'} size={18} color={c.muted} />
-          )}
-        </Pressable>
+
+          <ToggleRow c={c} icon="color-palette-outline" label="تەجوید (ڕەنگکردنی ئەحکام)" value={tajweed} onToggle={onToggleTajweed} />
+          <ToggleRow c={c} icon="document-text-outline" label="پیشاندانی تەفسیر" value={showTafsir} onToggle={onToggleTafsir} />
+          <ToggleRow c={c} icon={isDark ? 'moon' : 'sunny-outline'} label="دۆخی تاریک" value={isDark} onToggle={onToggleDark} />
+
+          {/* Font size */}
+          <View style={[styles.sheetRow, { borderColor: c.line }]}>
+            <View style={styles.sheetRowLeft}>
+              <Ionicons name="text-outline" size={20} color={c.accent} />
+              <Text style={[styles.sheetLabel, { color: c.ink }]}>قەبارەی نووسین</Text>
+            </View>
+            <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 10 }}>
+              <Pressable hitSlop={8} onPress={() => onScale(-0.1)} style={[styles.stepBtn, { backgroundColor: c.accentSoft }]}>
+                <Ionicons name="remove" size={18} color={c.accent} />
+              </Pressable>
+              <Text style={{ color: c.ink, fontSize: 13, fontWeight: '700', minWidth: 40, textAlign: 'center' }}>
+                {Math.round(scale * 100)}٪
+              </Text>
+              <Pressable hitSlop={8} onPress={() => onScale(0.1)} style={[styles.stepBtn, { backgroundColor: c.accentSoft }]}>
+                <Ionicons name="add" size={18} color={c.accent} />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Offline download */}
+          <Pressable
+            style={[styles.sheetRow, { borderColor: c.line }]}
+            onPress={() => (downloaded ? onRemoveDownload() : downloading ? null : onDownload())}
+          >
+            <View style={styles.sheetRowLeft}>
+              <Ionicons name={downloaded ? 'checkmark-circle' : 'download-outline'} size={20} color={c.accent} />
+              <Text style={[styles.sheetLabel, { color: c.ink }]}>
+                {downloaded ? 'داگیراوە' : 'داگرتن بۆ بێ ئینتەرنێت'}
+              </Text>
+            </View>
+            {downloading ? (
+              <Text style={{ color: c.accent, fontSize: 12, fontWeight: '800' }}>{Math.round(downloadProgress * 100)}٪</Text>
+            ) : (
+              <Ionicons name={downloaded ? 'trash-outline' : 'chevron-back'} size={18} color={c.muted} />
+            )}
+          </Pressable>
+        </Animated.View>
+
+        <Animated.View style={{ flex: 1, opacity: backdropOpacity }}>
+          <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -299,11 +333,6 @@ function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir,
       ]}
     >
       <View style={styles.cardTop}>
-        <View style={[styles.mini, { backgroundColor: active ? c.accent : c.accentSoft }]}>
-          <Text style={{ color: active ? c.onAccent : c.accent, fontSize: 11, fontWeight: '700' }}>
-            {toArabicDigits(ayah.ayah)}
-          </Text>
-        </View>
         <View style={{ flexDirection: 'row-reverse', gap: 16, alignItems: 'center' }}>
           <Pressable hitSlop={8} onPress={onPlay}>
             <Ionicons name={playing ? 'pause-circle' : 'play-circle'} size={24} color={active ? c.accent : c.muted} />
@@ -315,9 +344,12 @@ function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir,
       </View>
       <Pressable onPress={onPlay}>
         {tajweed ? (
-          <TajweedText surah={surah} ayah={ayah.ayah} fontSize={26 * scale} color={c.ink} fallbackText={ayah.text} />
+          <TajweedText surah={surah} ayah={ayah.ayah} fontSize={26 * scale} color={c.ink} fallbackText={ayah.text} endMark={toArabicDigits(ayah.ayah)} endColor={c.accent} />
         ) : (
-          <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 52 * scale }]}>{ayah.text}</Text>
+          <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 52 * scale }]}>
+            {ayah.text}{' '}
+            <Text style={{ color: c.accent, fontSize: 30 * scale }}>{`۝${toArabicDigits(ayah.ayah)}`}</Text>
+          </Text>
         )}
       </Pressable>
       {tafsir ? (
@@ -375,11 +407,11 @@ const styles = StyleSheet.create({
   pageFrame: { borderWidth: 2, borderRadius: 12, padding: 16, minHeight: 400 },
   flow: { fontFamily: 'UthmanicHafs', fontSize: 24, lineHeight: 58, textAlign: 'justify', writingDirection: 'rtl' },
   pageFoot: { flexDirection: 'row-reverse', justifyContent: 'space-between', marginTop: 10, paddingHorizontal: 6 },
-  // Reader settings bottom-sheet
+  // Reader settings left drawer
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 22, borderTopRightRadius: 22, paddingHorizontal: 18, paddingTop: 10 },
-  sheetGrip: { width: 42, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 12 },
-  sheetTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 12 },
+  drawer: { paddingHorizontal: 18, borderRightWidth: 1, borderTopRightRadius: 20, borderBottomRightRadius: 20 },
+  drawerHead: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  sheetTitle: { fontSize: 16, fontWeight: '800', textAlign: 'right' },
   sheetRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderTopWidth: 1 },
   sheetRowLeft: { flexDirection: 'row-reverse', alignItems: 'center', gap: 12 },
   sheetLabel: { fontSize: 14, fontWeight: '600' },
