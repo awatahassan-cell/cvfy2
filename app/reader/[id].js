@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -28,10 +28,15 @@ export default function Reader() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
-  const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
+  const { readMode, showTafsir, tafsirId, reciterId, tajweed, fontScale, themeId, isBookmarked, toggleBookmark, setLastRead, update } = useSettings();
   const scale = fontScale || 1;
   const { playSurah, playAyah: playAyahAudio, current, currentAyah, mode, position, duration, isPlaying } = usePlayer();
   const { isDownloaded, download, remove, progressFor } = useDownloads();
+  const [showSheet, setShowSheet] = useState(false);
+
+  // Simple dark/light switch: flip to a matching preset without losing the mode.
+  const toggleDark = () => update({ themeId: theme.dark ? 'aurora' : 'midnight' });
+  const changeScale = (delta) => update({ fontScale: Math.min(1.8, Math.max(0.7, Math.round((scale + delta) * 10) / 10)) });
 
   const surah = getSurah(surahNumber);
   const ayahs = useMemo(() => getSurahAyahs(surahNumber), [surahNumber]);
@@ -107,33 +112,39 @@ export default function Reader() {
           </Text>
         </View>
         <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6 }}>
-          <DownloadButton
-            c={c}
-            downloaded={isDownloaded(reciterId, surahNumber)}
-            progress={progressFor(reciterId, surahNumber)}
-            onDownload={() => download(reciterId, surahNumber)}
-            onRemove={() => remove(reciterId, surahNumber)}
-          />
-          <Pressable
-            style={[styles.iconBtn, { backgroundColor: tajweed ? c.accent : c.accentSoft }]}
-            onPress={() => update({ tajweed: !tajweed })}
-          >
-            <Ionicons name={tajweed ? 'color-palette' : 'color-palette-outline'} size={18} color={tajweed ? c.onAccent : c.accent} />
-          </Pressable>
-          <Pressable
-            style={[styles.iconBtn, { backgroundColor: showTafsir ? c.accent : c.accentSoft }]}
-            onPress={() => update({ showTafsir: !showTafsir })}
-          >
-            <Ionicons name={showTafsir ? 'document-text' : 'document-text-outline'} size={18} color={showTafsir ? c.onAccent : c.accent} />
-          </Pressable>
           <Pressable
             style={[styles.iconBtn, { backgroundColor: isThisSurahPlaying ? c.accent : c.accentSoft }]}
             onPress={listen}
           >
             <Ionicons name="headset" size={17} color={isThisSurahPlaying ? c.onAccent : c.accent} />
           </Pressable>
+          <Pressable
+            style={[styles.iconBtn, { backgroundColor: c.accentSoft }]}
+            onPress={() => setShowSheet(true)}
+          >
+            <Ionicons name="options-outline" size={19} color={c.accent} />
+          </Pressable>
         </View>
       </View>
+
+      <ReaderSettingsSheet
+        visible={showSheet}
+        onClose={() => setShowSheet(false)}
+        c={c}
+        insets={insets}
+        tajweed={tajweed}
+        showTafsir={showTafsir}
+        isDark={theme.dark}
+        scale={scale}
+        downloaded={isDownloaded(reciterId, surahNumber)}
+        downloadProgress={progressFor(reciterId, surahNumber)}
+        onToggleTajweed={() => update({ tajweed: !tajweed })}
+        onToggleTafsir={() => update({ showTafsir: !showTafsir })}
+        onToggleDark={toggleDark}
+        onScale={changeScale}
+        onDownload={() => download(reciterId, surahNumber)}
+        onRemoveDownload={() => remove(reciterId, surahNumber)}
+      />
 
       {useWebTajweed ? (
         <TajweedWebView
@@ -204,22 +215,76 @@ export default function Reader() {
   );
 }
 
-function DownloadButton({ c, downloaded, progress, onDownload, onRemove }) {
-  const downloading = progress != null;
+// Bottom-sheet with the reading options (replaces the crowded header buttons).
+function ReaderSettingsSheet({
+  visible, onClose, c, insets,
+  tajweed, showTafsir, isDark, scale,
+  downloaded, downloadProgress,
+  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onDownload, onRemoveDownload,
+}) {
+  const downloading = downloadProgress != null;
   return (
-    <Pressable
-      style={[styles.iconBtn, { backgroundColor: downloaded ? c.accent : c.accentSoft }]}
-      onPress={() => (downloaded ? onRemove() : downloading ? null : onDownload())}
-    >
-      {downloading ? (
-        <Text style={{ color: c.accent, fontSize: 10, fontWeight: '800' }}>{Math.round(progress * 100)}٪</Text>
-      ) : (
-        <Ionicons
-          name={downloaded ? 'checkmark-circle' : 'download-outline'}
-          size={18}
-          color={downloaded ? c.onAccent : c.accent}
-        />
-      )}
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+      <View style={[styles.sheet, { backgroundColor: c.bg, paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.sheetGrip, { backgroundColor: c.line }]} />
+        <Text style={[styles.sheetTitle, { color: c.ink }]}>ڕێکخستنی خوێندنەوە</Text>
+
+        <ToggleRow c={c} icon="color-palette-outline" label="تەجوید (ڕەنگکردنی ئەحکام)" value={tajweed} onToggle={onToggleTajweed} />
+        <ToggleRow c={c} icon="document-text-outline" label="پیشاندانی تەفسیر" value={showTafsir} onToggle={onToggleTafsir} />
+        <ToggleRow c={c} icon={isDark ? 'moon' : 'sunny-outline'} label="دۆخی تاریک" value={isDark} onToggle={onToggleDark} />
+
+        {/* Font size */}
+        <View style={[styles.sheetRow, { borderColor: c.line }]}>
+          <View style={styles.sheetRowLeft}>
+            <Ionicons name="text-outline" size={20} color={c.accent} />
+            <Text style={[styles.sheetLabel, { color: c.ink }]}>قەبارەی نووسین</Text>
+          </View>
+          <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 14 }}>
+            <Pressable hitSlop={8} onPress={() => onScale(-0.1)} style={[styles.stepBtn, { backgroundColor: c.accentSoft }]}>
+              <Ionicons name="remove" size={18} color={c.accent} />
+            </Pressable>
+            <Text style={{ color: c.ink, fontSize: 13, fontWeight: '700', minWidth: 40, textAlign: 'center' }}>
+              {Math.round(scale * 100)}٪
+            </Text>
+            <Pressable hitSlop={8} onPress={() => onScale(0.1)} style={[styles.stepBtn, { backgroundColor: c.accentSoft }]}>
+              <Ionicons name="add" size={18} color={c.accent} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Offline download */}
+        <Pressable
+          style={[styles.sheetRow, { borderColor: c.line }]}
+          onPress={() => (downloaded ? onRemoveDownload() : downloading ? null : onDownload())}
+        >
+          <View style={styles.sheetRowLeft}>
+            <Ionicons name={downloaded ? 'checkmark-circle' : 'download-outline'} size={20} color={c.accent} />
+            <Text style={[styles.sheetLabel, { color: c.ink }]}>
+              {downloaded ? 'داگیراوە بۆ بێ ئینتەرنێت' : 'داگرتن بۆ بێ ئینتەرنێت'}
+            </Text>
+          </View>
+          {downloading ? (
+            <Text style={{ color: c.accent, fontSize: 12, fontWeight: '800' }}>{Math.round(downloadProgress * 100)}٪</Text>
+          ) : (
+            <Ionicons name={downloaded ? 'trash-outline' : 'chevron-back'} size={18} color={c.muted} />
+          )}
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
+
+function ToggleRow({ c, icon, label, value, onToggle }) {
+  return (
+    <Pressable style={[styles.sheetRow, { borderColor: c.line }]} onPress={onToggle}>
+      <View style={styles.sheetRowLeft}>
+        <Ionicons name={icon} size={20} color={c.accent} />
+        <Text style={[styles.sheetLabel, { color: c.ink }]}>{label}</Text>
+      </View>
+      <View style={[styles.switch, { backgroundColor: value ? c.accent : c.line }]}>
+        <View style={[styles.knob, { transform: [{ translateX: value ? -18 : 0 }] }]} />
+      </View>
     </Pressable>
   );
 }
@@ -310,4 +375,15 @@ const styles = StyleSheet.create({
   pageFrame: { borderWidth: 2, borderRadius: 12, padding: 16, minHeight: 400 },
   flow: { fontFamily: 'UthmanicHafs', fontSize: 24, lineHeight: 58, textAlign: 'justify', writingDirection: 'rtl' },
   pageFoot: { flexDirection: 'row-reverse', justifyContent: 'space-between', marginTop: 10, paddingHorizontal: 6 },
+  // Reader settings bottom-sheet
+  sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 22, borderTopRightRadius: 22, paddingHorizontal: 18, paddingTop: 10 },
+  sheetGrip: { width: 42, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 12 },
+  sheetTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 12 },
+  sheetRow: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderTopWidth: 1 },
+  sheetRowLeft: { flexDirection: 'row-reverse', alignItems: 'center', gap: 12 },
+  sheetLabel: { fontSize: 14, fontWeight: '600' },
+  switch: { width: 44, height: 26, borderRadius: 100, padding: 3, flexDirection: 'row', justifyContent: 'flex-end' },
+  knob: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff' },
+  stepBtn: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
 });

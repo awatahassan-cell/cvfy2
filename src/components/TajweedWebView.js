@@ -52,8 +52,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
           ? `<div class="taf ${tafsirLtr ? 'ltr' : ''}"><div class="tafname">${esc(tafsirName)}</div>${esc(tafsirMap[a.ayah])}</div>`
           : '';
       return `<div class="card" data-n="${a.ayah}" onclick="pick(${a.ayah})">
-        <div class="badge">${num}</div>
-        <div class="ayah">${html}</div>
+        <div class="ayah">${html}<span class="end"><span class="endn">${num}</span></span></div>
         ${taf}
       </div>`;
     })
@@ -72,7 +71,10 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
 <style>
   @font-face {
     font-family: 'UthmanicHafs';
-    src: url(data:font/otf;base64,${UTHMANIC_FONT_BASE64}) format('opentype');
+    /* The file is TrueType-flavoured (sfnt 0x00010000) despite the .otf name;
+       Android WebView rejects a mismatched format() hint and falls back to the
+       system font, so declare 'truetype' with a ttf mime. */
+    src: url(data:font/ttf;base64,${UTHMANIC_FONT_BASE64}) format('truetype');
     font-display: block;
   }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
@@ -93,17 +95,27 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     transition: background .2s, border-color .2s;
   }
   .card.active { background: ${c.accentSoft}; border-color: ${c.accent}; }
-  .badge {
-    width: 28px; height: 28px; border-radius: 14px; background: ${c.accentSoft};
-    color: ${c.accent}; font-size: 12px; font-weight: 700; display: flex;
-    align-items: center; justify-content: center; margin-bottom: 10px;
-    font-family: -apple-system, system-ui, sans-serif;
-  }
-  .card.active .badge { background: ${c.accent}; color: ${c.onAccent}; }
   .ayah {
-    font-family: 'UthmanicHafs'; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2)}px;
+    font-family: 'UthmanicHafs'; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
+  /* Ornamental end-of-ayah marker (mushaf-style rosette) with the number inside. */
+  .end {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: ${Math.round(fontSize * 1.25)}px; height: ${Math.round(fontSize * 1.25)}px;
+    margin: 0 6px; vertical-align: middle; position: relative;
+    color: ${c.accent};
+  }
+  .end::before, .end::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 1.5px solid ${c.accent};
+  }
+  .end::after { inset: ${Math.round(fontSize * 0.16)}px; border-width: 1px; opacity: .55; transform: rotate(45deg); border-radius: 40%; }
+  .endn {
+    font-family: -apple-system, system-ui, sans-serif; font-weight: 700;
+    font-size: ${Math.round(fontSize * 0.42)}px; line-height: 1; z-index: 1;
+  }
+  .card.active .end { color: ${c.accent}; }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
     color: ${c.muted}; font-size: ${Math.round(14 * scale)}px; line-height: ${Math.round(26 * scale)}px;
