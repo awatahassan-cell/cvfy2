@@ -1,8 +1,9 @@
 import React, { useMemo, useRef } from 'react';
 import { WebView } from 'react-native-webview';
-import { getAyahSegments, resolveColor, DEFAULT_TAJWEED_COLORS } from 'react-native-quran-tajweed';
+import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
 
 import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
+import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
 
 // Render a whole surah's tajweed text inside a single WebView.
@@ -32,7 +33,7 @@ function ayahHtml(surah, ayahNumber, fallbackText) {
 
   return segments
     .map((seg) => {
-      const col = resolveColor(seg.rules, DEFAULT_TAJWEED_COLORS);
+      const col = resolveColor(seg.rules, TAJWEED_COLORS);
       const body = esc(seg.text);
       return col ? `<span style="color:${col}">${body}</span>` : body;
     })

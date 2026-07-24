@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, Platform } from 'react-native';
-import { getAyahSegments, resolveColor, DEFAULT_TAJWEED_COLORS } from 'react-native-quran-tajweed';
+import { getAyahSegments, resolveColor } from 'react-native-quran-tajweed';
+import { TAJWEED_COLORS } from '../lib/tajweedColors';
 
 // The tajweed data splits an ayah into colored runs that often cut *inside* a
 // word (e.g. "ٱ" | "للَّهِ").
@@ -58,7 +59,7 @@ export default function TajweedText({ surah, ayah, fontSize = 26, color, style, 
   return (
     <Text style={base}>
       {runs.map((seg, i) => {
-        const col = resolveColor(seg.rules, DEFAULT_TAJWEED_COLORS);
+        const col = resolveColor(seg.rules, TAJWEED_COLORS);
         return (
           <Text key={i} style={col ? { color: col } : null}>
             {seg.text}
