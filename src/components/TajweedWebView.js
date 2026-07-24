@@ -20,6 +20,31 @@ function esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Arabic combining marks (harakat, sukoon, etc). U+06E1 — the Quranic sukoon —
+// sits in the U+06DF-U+06E4 range.
+const AR_MARK = /^[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ࣓-ࣿ]+/;
+
+// Tajweed splits the ayah into rule segments. If a segment *starts* with a
+// combining mark (e.g. a sukoon), that mark got separated from the base letter
+// it belongs to (which ended the previous segment). An isolated combining mark
+// renders wrong — the sukoon comes out round. Glue leading marks back onto the
+// previous segment so every base letter keeps its marks in one shaping run,
+// exactly like plain mode. The colour swap on a tiny mark is imperceptible.
+function glueMarks(segments) {
+  const out = [];
+  for (const seg of segments) {
+    let text = seg.text;
+    const m = text.match(AR_MARK);
+    if (m && out.length > 0) {
+      const prev = out[out.length - 1];
+      out[out.length - 1] = { ...prev, text: prev.text + m[0] };
+      text = text.slice(m[0].length);
+    }
+    if (text.length > 0) out.push({ ...seg, text });
+  }
+  return out;
+}
+
 // Colored HTML for one ayah (tajweed on) or plain escaped text (tajweed off).
 // The browser shapes Arabic across adjacent <span> boundaries on its own, so we
 // add no joiner (a ZWJ would make the font draw a spurious kashida).
@@ -33,7 +58,7 @@ function ayahHtml(surah, ayahNumber, fallbackText, colored) {
   if (!segments || segments.length === 0) return esc(fallbackText || '');
   if (!colored) return esc(segments.map((s) => s.text).join(''));
 
-  return segments
+  return glueMarks(segments)
     .map((seg) => {
       const col = resolveColor(seg.rules, TAJWEED_COLORS);
       const body = esc(seg.text);
@@ -98,7 +123,11 @@ function buildDocument({
   ${textFace}
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: ${c.bg}; }
-  body { padding: 16px 16px 200px; }
+  /* Keep text hidden until the embedded font is truly loaded. Otherwise the
+     WebView paints Arabic with a fallback system font first, and combining
+     marks (the sukoon) get shaped by that fallback and come out round. */
+  body { padding: 16px 16px 200px; opacity: 0; transition: opacity .12s ease; }
+  body.fready { opacity: 1; }
   .banner {
     border: 1.5px solid ${c.accent}; border-radius: 10px; padding: 12px;
     text-align: center; color: ${c.accent}; font-family: ${TEXT_FONT};
@@ -166,7 +195,19 @@ function buildDocument({
     var t = document.querySelector('.card[data-n="'+INITIAL_AYAH+'"]');
     if (t){ t.scrollIntoView({ block:'start' }); window.scrollBy(0, -14); }
   }
-  document.fonts && document.fonts.ready.then(function(){ post({ type:'ready' }); });
+  // Reveal the body only once BOTH the ayah-text font and the rosette-number
+  // font have loaded, so nothing ever paints with a fallback font.
+  function reveal(){ document.body.classList.add('fready'); post({ type:'ready' }); }
+  if (document.fonts && document.fonts.load){
+    Promise.all([
+      document.fonts.load('${fontSize}px "${font.family}"'),
+      document.fonts.load('${fontSize}px "UthmanicHafs"')
+    ]).then(reveal).catch(reveal);
+    // Safety net: never leave text hidden if font loading stalls.
+    setTimeout(reveal, 1800);
+  } else {
+    reveal();
+  }
 </script>
 </body>
 </html>`;
