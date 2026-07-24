@@ -49,9 +49,9 @@ export default function TajweedText({ surah, ayah, fontSize = 26, color, style, 
     style,
   ];
 
-  // Ayah number framed by ornate parentheses (﴾ ﴿) — a font-independent marker.
+  // Plain ayah number (no frame / no rosette), matching the plain reader.
   const mark = endMark ? (
-    <Text style={{ color: endColor || color, fontSize: fontSize * 1.05 }}>{`  ﴾${endMark}﴿`}</Text>
+    <Text style={{ color: endColor || color, fontSize: fontSize * 0.92 }}>{`  ${endMark}`}</Text>
   ) : null;
 
   if (!segments || segments.length === 0) {

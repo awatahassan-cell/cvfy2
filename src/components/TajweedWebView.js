@@ -8,10 +8,6 @@ import { toArabicDigits } from '../lib/format';
 
 // Same Uthmani font the plain reader uses, so both modes look identical.
 const QURAN_FONT = "'UthmanicHafs', 'Noto Naskh Arabic', serif";
-// The ayah-number marker uses a plain Arabic font so the digit stays a normal
-// numeral inside the ﴾ ﴿ frame (the Uthmani font would draw it as a rosette,
-// which nested inside the frame looks busy).
-const NUM_FONT = "'Noto Naskh Arabic', 'Traditional Arabic', serif";
 
 // Render a whole surah's tajweed text inside a single WebView.
 //
@@ -59,7 +55,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
           ? `<div class="taf ${tafsirLtr ? 'ltr' : ''}"><div class="tafname">${esc(tafsirName)}</div>${esc(tafsirMap[a.ayah])}</div>`
           : '';
       return `<div class="card" data-n="${a.ayah}" onclick="pick(${a.ayah})">
-        <div class="ayah">${html}<span class="end">﴾${num}﴿</span></div>
+        <div class="ayah">${html}<span class="end">${num}</span></div>
         ${taf}
       </div>`;
     })
@@ -103,11 +99,11 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Ayah number framed by ornate parentheses (﴾ ﴿) — a font-independent marker
-     that renders the same in both the plain and tajweed renderers. */
+  /* Plain ayah number in the Uthmani font — font-variant:none suppresses the
+     font's decorative rosette so the digit matches the plain reader (no circle). */
   .end {
-    font-family: ${NUM_FONT}; color: ${c.accent};
-    font-size: ${Math.round(fontSize * 0.95)}px; margin: 0 5px; white-space: nowrap;
+    font-family: ${QURAN_FONT}; color: ${c.accent}; font-variant: none;
+    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 10px; white-space: nowrap;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
