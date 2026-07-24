@@ -13,6 +13,7 @@ import MiniPlayer from '../../src/components/MiniPlayer';
 import Glass from '../../src/components/Glass';
 import TajweedText from '../../src/components/TajweedText';
 import TajweedWebView from '../../src/components/TajweedWebView';
+import TajweedGuide from '../../src/components/TajweedGuide';
 import { QURAN_FONTS } from '../../src/lib/quranFonts';
 import { useDownloads } from '../../src/store/DownloadsContext';
 
@@ -34,6 +35,7 @@ export default function Reader() {
   const { playSurah, playAyah: playAyahAudio, current, currentAyah, mode, position, duration, isPlaying } = usePlayer();
   const { isDownloaded, download, remove, progressFor } = useDownloads();
   const [showSheet, setShowSheet] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   // Simple dark/light switch: flip to a matching preset without losing the mode.
   const toggleDark = () => update({ themeId: theme.dark ? 'aurora' : 'midnight' });
@@ -151,9 +153,12 @@ export default function Reader() {
         onToggleTafsir={() => update({ showTafsir: !showTafsir })}
         onToggleDark={toggleDark}
         onScale={changeScale}
+        onOpenGuide={() => { setShowSheet(false); setShowGuide(true); }}
         onDownload={() => download(reciterId, surahNumber)}
         onRemoveDownload={() => remove(reciterId, surahNumber)}
       />
+
+      <TajweedGuide visible={showGuide} onClose={() => setShowGuide(false)} c={c} />
 
       {useWebView ? (
         <TajweedWebView
@@ -233,7 +238,7 @@ function ReaderSettingsSheet({
   visible, onClose, c, insets,
   tajweed, showTafsir, isDark, scale, quranFontId,
   downloaded, downloadProgress,
-  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onSelectFont, onDownload, onRemoveDownload,
+  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onSelectFont, onOpenGuide, onDownload, onRemoveDownload,
 }) {
   const downloading = downloadProgress != null;
   const W = Math.min(340, Dimensions.get('window').width * 0.84);
@@ -273,6 +278,13 @@ function ReaderSettingsSheet({
           </View>
 
           <ToggleRow c={c} icon="color-palette-outline" label="تەجوید (ڕەنگکردنی ئەحکام)" value={tajweed} onToggle={onToggleTajweed} />
+          <Pressable style={[styles.sheetRow, { borderColor: c.line }]} onPress={onOpenGuide}>
+            <View style={styles.sheetRowLeft}>
+              <Ionicons name="help-circle-outline" size={20} color={c.accent} />
+              <Text style={[styles.sheetLabel, { color: c.ink }]}>ڕوونکردنەوەی حوکم و ڕەنگەکان</Text>
+            </View>
+            <Ionicons name="chevron-back" size={18} color={c.muted} />
+          </Pressable>
           <ToggleRow c={c} icon="document-text-outline" label="پیشاندانی تەفسیر" value={showTafsir} onToggle={onToggleTafsir} />
           <ToggleRow c={c} icon={isDark ? 'moon' : 'sunny-outline'} label="دۆخی تاریک" value={isDark} onToggle={onToggleDark} />
 
