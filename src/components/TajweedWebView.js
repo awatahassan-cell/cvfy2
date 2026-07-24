@@ -6,26 +6,22 @@ import { UTHMANIC_FONT_BASE64 } from '../lib/uthmanicFontBase64';
 import { TAJWEED_COLORS } from '../lib/tajweedColors';
 import { toArabicDigits } from '../lib/format';
 
-// Same Uthmani font the plain reader uses, so both modes look identical.
+// The whole reader (both plain and tajweed) is rendered inside one WebView on
+// native. React Native's Android text engine breaks Arabic shaping across the
+// colored runs tajweed needs, and it can't draw the font's ornate end-of-ayah
+// rosette; the browser engine does both correctly. Using the WebView for both
+// modes keeps the Uthmani font and the ayah-number ornament identical whether
+// tajweed coloring is on or off.
 const QURAN_FONT = "'UthmanicHafs', 'Noto Naskh Arabic', serif";
-
-// Render a whole surah's tajweed text inside a single WebView.
-//
-// React Native's Android text engine does not shape Arabic across the color
-// runs that tajweed coloring needs, so letters break apart. The browser engine
-// (used by react-native-webview) shapes Arabic correctly across colored spans,
-// so the text stays connected AND colored. We use one WebView for the whole
-// surah (a per-ayah WebView would mean hundreds of instances).
 
 function esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Build the colored HTML for one ayah. The browser engine shapes Arabic across
-// adjacent <span> boundaries on its own (color does not break shaping), so we
-// must NOT insert any joiner — a Zero-Width Joiner here makes this font draw a
-// spurious kashida (ـ) at each colored boundary.
-function ayahHtml(surah, ayahNumber, fallbackText) {
+// Colored HTML for one ayah (tajweed on) or plain escaped text (tajweed off).
+// The browser shapes Arabic across adjacent <span> boundaries on its own, so we
+// add no joiner (a ZWJ would make the font draw a spurious kashida).
+function ayahHtml(surah, ayahNumber, fallbackText, colored) {
   let segments = null;
   try {
     segments = getAyahSegments(surah, ayahNumber);
@@ -33,6 +29,7 @@ function ayahHtml(surah, ayahNumber, fallbackText) {
     segments = null;
   }
   if (!segments || segments.length === 0) return esc(fallbackText || '');
+  if (!colored) return esc(segments.map((s) => s.text).join(''));
 
   return segments
     .map((seg) => {
@@ -43,27 +40,39 @@ function ayahHtml(surah, ayahNumber, fallbackText) {
     .join('');
 }
 
-function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr, initialAyah }) {
+const ICON_PLAY = (col) =>
+  `<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="${col}" stroke-width="1.5"><circle cx="12" cy="12" r="9.2"/><path d="M10 8.3l6 3.7-6 3.7z" fill="${col}" stroke="none"/></svg>`;
+const ICON_BM = (col, on) =>
+  `<svg viewBox="0 0 24 24" width="20" height="20" fill="${on ? col : 'none'}" stroke="${col}" stroke-width="1.6"><path d="M6 3.5h12a0 0 0 0 1 0 0v17l-6-4.2-6 4.2v-17a0 0 0 0 1 0 0z"/></svg>`;
+
+function buildDocument({
+  surah, ayahs, colors, scale, tajweed, bannerText, basmala,
+  showTafsir, tafsirMap, tafsirName, tafsirLtr, bookmarks, initialAyah,
+}) {
   const c = colors;
   const fontSize = Math.round(26 * scale);
+  const bmSet = new Set(bookmarks || []);
   const cards = ayahs
     .map((a) => {
-      const html = ayahHtml(surah, a.ayah, a.text);
+      const html = ayahHtml(surah, a.ayah, a.text, tajweed);
       const num = toArabicDigits(a.ayah);
+      const on = bmSet.has(a.ayah);
       const taf =
         showTafsir && tafsirMap && tafsirMap[a.ayah]
           ? `<div class="taf ${tafsirLtr ? 'ltr' : ''}"><div class="tafname">${esc(tafsirName)}</div>${esc(tafsirMap[a.ayah])}</div>`
           : '';
-      return `<div class="card" data-n="${a.ayah}" onclick="pick(${a.ayah})">
-        <div class="ayah">${html}<span class="end">${num}</span></div>
+      return `<div class="card" data-n="${a.ayah}">
+        <div class="top">
+          <span class="ic" onclick="pick(${a.ayah})">${ICON_PLAY(c.muted)}</span>
+          <span class="ic bm" onclick="bm(${a.ayah})">${ICON_BM(on ? c.accent : c.muted, on)}</span>
+        </div>
+        <div class="ayah" onclick="pick(${a.ayah})">${html}<span class="end">${num}</span></div>
         ${taf}
       </div>`;
     })
     .join('');
 
-  const banner = bannerText
-    ? `<div class="banner">${esc(bannerText)}</div>`
-    : '';
+  const banner = bannerText ? `<div class="banner">${esc(bannerText)}</div>` : '';
   const bas = basmala ? `<div class="basmala">${esc(basmala)}</div>` : '';
 
   return `<!DOCTYPE html>
@@ -95,15 +104,17 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     transition: background .2s, border-color .2s;
   }
   .card.active { background: ${c.accentSoft}; border-color: ${c.accent}; }
+  .top { display: flex; justify-content: flex-start; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .ic { display: inline-flex; cursor: pointer; }
   .ayah {
-    font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
+    font-family: ${QURAN_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Plain ayah number in the Uthmani font — font-variant:none suppresses the
-     font's decorative rosette so the digit matches the plain reader (no circle). */
+  /* Authentic end-of-ayah rosette: the Uthmani font draws the number inside an
+     ornate marker. */
   .end {
-    font-family: ${QURAN_FONT}; color: ${c.accent}; font-variant: none;
-    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 10px; white-space: nowrap;
+    font-family: ${QURAN_FONT}; color: ${c.accent};
+    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 8px;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
@@ -121,6 +132,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
 <script>
   function post(o){ try { window.ReactNativeWebView.postMessage(JSON.stringify(o)); } catch(e){} }
   function pick(n){ post({ type:'play', ayah:n }); }
+  function bm(n){ post({ type:'bookmark', ayah:n }); }
   function highlight(n){
     document.querySelectorAll('.card.active').forEach(function(e){ e.classList.remove('active'); });
     if(n==null) return;
@@ -132,7 +144,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     if(el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); }
   }
   // Report the top-most visible ayah so RN can restore position after a rebuild
-  // (e.g. toggling tafsir or switching theme rebuilds this document).
+  // (toggling tajweed/tafsir or switching theme rebuilds this document).
   function topAyah(){
     var cards = document.querySelectorAll('.card');
     for (var i=0;i<cards.length;i++){ if (cards[i].getBoundingClientRect().bottom > 90) return +cards[i].getAttribute('data-n'); }
@@ -140,7 +152,6 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
   }
   var lastTop = 0;
   window.addEventListener('scroll', function(){ var n=topAyah(); if(n && n!==lastTop){ lastTop=n; post({ type:'top', ayah:n }); } }, { passive:true });
-  // Restore the previous reading position instantly on (re)load.
   var INITIAL_AYAH = ${initialAyah || 0};
   if (INITIAL_AYAH){
     var t = document.querySelector('.card[data-n="'+INITIAL_AYAH+'"]');
@@ -157,41 +168,32 @@ export default function TajweedWebView({
   ayahs,
   colors,
   scale = 1,
+  tajweed = true,
   bannerText,
   basmala,
   showTafsir,
   tafsirMap,
   tafsirName,
   tafsirLtr,
+  bookmarks,
   activeAyah,
   playing,
   onPlayAyah,
+  onToggleBookmark,
 }) {
   const ref = useRef(null);
-  // Top-most visible ayah, kept up to date from the page's scroll events. Read
-  // (not depended on) when the document rebuilds, so a rebuild reopens at the
-  // same ayah instead of jumping back to the top.
   const topAyahRef = useRef(0);
 
-  // Rebuild the document only when content-affecting inputs change (not on every
-  // active-ayah tick — highlighting is done by injecting JS instead).
+  const bookmarksKey = (bookmarks || []).join(',');
   const html = useMemo(
     () =>
       buildDocument({
-        surah,
-        ayahs,
-        colors,
-        scale,
-        bannerText,
-        basmala,
-        showTafsir,
-        tafsirMap,
-        tafsirName,
-        tafsirLtr,
-        initialAyah: topAyahRef.current,
+        surah, ayahs, colors, scale, tajweed, bannerText, basmala,
+        showTafsir, tafsirMap, tafsirName, tafsirLtr,
+        bookmarks, initialAyah: topAyahRef.current,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [surah, ayahs, colors, scale, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr]
+    [surah, ayahs, colors, scale, tajweed, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr, bookmarksKey]
   );
 
   // Push active-ayah highlight + auto-scroll into the page.
@@ -207,6 +209,7 @@ export default function TajweedWebView({
     try {
       const msg = JSON.parse(e.nativeEvent.data);
       if (msg.type === 'play' && onPlayAyah) onPlayAyah(msg.ayah);
+      else if (msg.type === 'bookmark' && onToggleBookmark) onToggleBookmark(msg.ayah);
       else if (msg.type === 'top' && msg.ayah) topAyahRef.current = msg.ayah;
     } catch (err) {}
   };
@@ -219,7 +222,6 @@ export default function TajweedWebView({
       onMessage={onMessage}
       style={{ flex: 1, backgroundColor: colors.bg }}
       showsVerticalScrollIndicator={false}
-      // Keep the whole surah rendered so highlight/scroll always find the node.
       androidLayerType="hardware"
     />
   );

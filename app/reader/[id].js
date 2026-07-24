@@ -96,7 +96,13 @@ export default function Reader() {
   const playAyahByNumber = (ayahNumber) => playAyahAudio(surahNumber, ayahNumber, reciterId, ayahs.length);
 
   const showStandaloneBasmala = surahNumber !== 1 && surahNumber !== 9;
-  const useWebTajweed = tajweed && WEBVIEW_TAJWEED;
+  // On native, render the reading list through the WebView for both plain and
+  // tajweed modes so the Uthmani font and ayah-number ornament are identical.
+  const useWebView = WEBVIEW_TAJWEED && readMode !== 'page';
+  const bookmarkedAyahs = useMemo(
+    () => ayahs.filter((a) => isBookmarked(surahNumber, a.ayah)).map((a) => a.ayah),
+    [ayahs, surahNumber, isBookmarked]
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
@@ -146,21 +152,24 @@ export default function Reader() {
         onRemoveDownload={() => remove(reciterId, surahNumber)}
       />
 
-      {useWebTajweed ? (
+      {useWebView ? (
         <TajweedWebView
           surah={surahNumber}
           ayahs={ayahs}
           colors={c}
           scale={scale}
+          tajweed={tajweed}
           bannerText={surah?.suraNameFormatted || surah?.name}
           basmala={showStandaloneBasmala ? BASMALA : ''}
           showTafsir={showTafsir}
           tafsirMap={tafsirMap}
           tafsirName={tafsirName}
           tafsirLtr={tafsirOpt.dir === 'ltr'}
+          bookmarks={bookmarkedAyahs}
           activeAyah={activeAyah}
           playing={isPlaying}
           onPlayAyah={playAyahByNumber}
+          onToggleBookmark={(n) => toggleBookmark(surahNumber, n)}
         />
       ) : (
       <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 180 }}>
