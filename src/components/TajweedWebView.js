@@ -40,10 +40,6 @@ function ayahHtml(surah, ayahNumber, fallbackText) {
     .join('');
 }
 
-// U+06DD ARABIC END OF AYAH — the Uthmani font renders this followed by the
-// Arabic-Indic ayah number as the ornate mushaf rosette with the number inside.
-const AYAH_MARK = '۝';
-
 function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showTafsir, tafsirMap, tafsirName, tafsirLtr, initialAyah }) {
   const c = colors;
   const fontSize = Math.round(26 * scale);
@@ -56,7 +52,7 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
           ? `<div class="taf ${tafsirLtr ? 'ltr' : ''}"><div class="tafname">${esc(tafsirName)}</div>${esc(tafsirMap[a.ayah])}</div>`
           : '';
       return `<div class="card" data-n="${a.ayah}" onclick="pick(${a.ayah})">
-        <div class="ayah">${html}<span class="end">${AYAH_MARK}${num}</span></div>
+        <div class="ayah">${html}<span class="end">${num}</span></div>
         ${taf}
       </div>`;
     })
@@ -103,10 +99,12 @@ function buildDocument({ surah, ayahs, colors, scale, bannerText, basmala, showT
     font-family: 'UthmanicHafs'; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.1)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
-  /* Authentic mushaf end-of-ayah rosette drawn by the Uthmani font (۝ + number). */
+  /* Authentic mushaf end-of-ayah rosette: the Uthmani font renders the ayah
+     number itself as the ornate enclosed marker, so no ۝ prefix is needed
+     (adding it would draw a second, empty rosette). */
   .end {
     font-family: 'UthmanicHafs'; color: ${c.accent};
-    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 4px;
+    font-size: ${Math.round(fontSize * 1.15)}px; margin: 0 5px;
   }
   .taf {
     margin-top: 12px; padding-top: 10px; border-top: 1px solid ${c.line};
