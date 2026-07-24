@@ -45,13 +45,13 @@ export default function TajweedText({ surah, ayah, fontSize = 26, color, style, 
   }
 
   const base = [
-    { fontFamily: 'UthmanicHafs', fontSize, lineHeight: fontSize * 2, color, textAlign: 'right', writingDirection: 'rtl' },
+    { fontFamily: 'NotoNaskhArabic', fontSize, lineHeight: fontSize * 2.1, color, textAlign: 'right', writingDirection: 'rtl' },
     style,
   ];
 
   // Ayah number rendered as the Uthmani font's ornate circular rosette.
   const mark = endMark ? (
-    <Text style={{ color: endColor || color, fontSize: fontSize }}>{`  ${endMark}`}</Text>
+    <Text style={{ color: endColor || color, fontSize: fontSize, fontFamily: 'UthmanicHafs' }}>{`  ${endMark}`}</Text>
   ) : null;
 
   if (!segments || segments.length === 0) {
