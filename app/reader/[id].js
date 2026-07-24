@@ -357,7 +357,7 @@ function AyahCard({ c, ayah, surah, tajweed, scale = 1, active, playing, tafsir,
         ) : (
           <Text style={[styles.arLine, { color: c.ink, fontSize: 26 * scale, lineHeight: 52 * scale }]}>
             {ayah.text}{'  '}
-            <Text style={{ color: c.accent, fontSize: 28 * scale }}>{`﴿${toArabicDigits(ayah.ayah)}﴾`}</Text>
+            <Text style={{ color: c.accent, fontSize: 26 * scale }}>{toArabicDigits(ayah.ayah)}</Text>
           </Text>
         )}
       </Pressable>
