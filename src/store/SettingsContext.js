@@ -11,12 +11,14 @@ const defaults = {
   showTafsir: true,
   tajweed: false,
   quranFontId: 'amiri', // ayah text font — see src/lib/quranFonts.js
+  showAzkarMeaning: true, // show the Kurdish meaning under each dhikr
   fontScale: 1,
   reciterId: 'peshawa',
   language: 'ku', // 'ku' | 'ar' | 'en'
   fontId: 'system',
   calcMethod: 'MuslimWorldLeague',
   madhab: 'shafi', // 'shafi' | 'hanafi'
+  manualLocation: null, // { id, name, lat, lng } — overrides GPS when set
   notifyPrayer: false,
   muezzin: 'makkah',
   adhanOn: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true },

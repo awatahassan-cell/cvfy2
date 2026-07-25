@@ -9,6 +9,7 @@ import { useSettings, useTheme } from '../src/store/SettingsContext';
 import { usePlayer } from '../src/store/PlayerContext';
 import { RECITERS } from '../src/lib/reciters';
 import { formatTime } from '../src/lib/format';
+import ReciterAvatar from '../src/components/ReciterAvatar';
 
 export default function Player() {
   const theme = useTheme();
@@ -128,15 +129,14 @@ export default function Player() {
         {RECITERS.map((r) => {
           const sel = r.id === (current?.reciterId || reciterId);
           return (
-            <Pressable
-              key={r.id}
-              onPress={() => pickReciter(r.id)}
-              style={[
-                styles.reciterChip,
-                { backgroundColor: sel ? c.accent : c.card, borderColor: sel ? c.accent : c.line },
-              ]}
-            >
-              <Text style={{ color: sel ? c.onAccent : c.ink, fontSize: 12, fontWeight: '600' }}>{r.name}</Text>
+            <Pressable key={r.id} onPress={() => pickReciter(r.id)} style={styles.reciterChip}>
+              <ReciterAvatar reciter={r} size={58} c={c} selected={sel} />
+              <Text
+                numberOfLines={1}
+                style={{ color: sel ? c.accent : c.muted, fontSize: 11, fontWeight: sel ? '800' : '600', marginTop: 6, maxWidth: 72, textAlign: 'center' }}
+              >
+                {r.name}
+              </Text>
             </Pressable>
           );
         })}
@@ -159,6 +159,6 @@ const styles = StyleSheet.create({
   controls: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 26, marginTop: 26 },
   mainBtn: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
   pickLabel: { textAlign: 'right', paddingHorizontal: 28, marginTop: 30, marginBottom: 10, fontSize: 12, fontWeight: '700' },
-  reciterRow: { flexDirection: 'row-reverse', gap: 8, paddingHorizontal: 24, paddingBottom: 30 },
-  reciterChip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 100, borderWidth: 1 },
+  reciterRow: { flexDirection: 'row-reverse', gap: 14, paddingHorizontal: 24, paddingBottom: 30 },
+  reciterChip: { alignItems: 'center', width: 72 },
 });

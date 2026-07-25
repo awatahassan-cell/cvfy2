@@ -7,7 +7,7 @@ import * as Speech from 'expo-speech';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 
-import { useTheme } from '../../src/store/SettingsContext';
+import { useTheme, useSettings } from '../../src/store/SettingsContext';
 import { getDhikrCategory, getDhikrByCategory } from '../../src/lib/religious';
 import { azkarAudioUrl } from '../../src/lib/azkarAudio';
 import { azkarRepeat } from '../../src/lib/azkarRepeat';
@@ -22,6 +22,7 @@ export default function AzkarDetail() {
   const theme = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
+  const { showAzkarMeaning, update } = useSettings();
 
   const category = getDhikrCategory(catId);
   const items = useMemo(() => getDhikrByCategory(catId), [catId]);
@@ -39,13 +40,19 @@ export default function AzkarDetail() {
           <Ionicons name="chevron-forward" size={26} color={c.ink} />
         </Pressable>
         <Text numberOfLines={1} style={[styles.hTitle, { color: c.ink }]}>{category?.name || 'ئەزکار'}</Text>
-        <View style={{ width: 26 }} />
+        <Pressable
+          hitSlop={10}
+          onPress={() => update({ showAzkarMeaning: !showAzkarMeaning })}
+          style={[styles.meaningBtn, { backgroundColor: showAzkarMeaning ? c.accentSoft : 'transparent', borderColor: showAzkarMeaning ? c.accent : c.line }]}
+        >
+          <Ionicons name={showAzkarMeaning ? 'language' : 'language-outline'} size={18} color={showAzkarMeaning ? c.accent : c.muted} />
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
         {items.map((item, i) => (
           <Animated.View key={item.id} entering={FadeInDown.delay(i * 40).springify().damping(16)}>
-            <DhikrCard c={c} item={item} index={i + 1} />
+            <DhikrCard c={c} item={item} index={i + 1} showMeaning={showAzkarMeaning} />
           </Animated.View>
         ))}
       </ScrollView>
@@ -53,7 +60,7 @@ export default function AzkarDetail() {
   );
 }
 
-function DhikrCard({ c, item, index }) {
+function DhikrCard({ c, item, index, showMeaning }) {
   // The bundled data ships count = 1 for everything; use the corrected repeat.
   const target = azkarRepeat(item.id);
   const [done, setDone] = useState(0);
@@ -140,7 +147,7 @@ function DhikrCard({ c, item, index }) {
       </View>
 
       <Text style={[styles.arabic, { color: c.ink }]}>{item.arabic}</Text>
-      {item.kurdish ? <Text style={[styles.kurdish, { color: c.muted }]}>{item.kurdish}</Text> : null}
+      {showMeaning && item.kurdish ? <Text style={[styles.kurdish, { color: c.muted }]}>{item.kurdish}</Text> : null}
 
       <Pressable
         onPress={() => setDone((d) => (d >= target ? 0 : d + 1))}
@@ -162,6 +169,7 @@ function DhikrCard({ c, item, index }) {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
   hTitle: { fontSize: 16, fontWeight: '800', flex: 1, textAlign: 'center' },
+  meaningBtn: { width: 34, height: 34, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
   cardTop: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   idx: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },

@@ -14,7 +14,6 @@ import Glass from '../../src/components/Glass';
 import TajweedText from '../../src/components/TajweedText';
 import TajweedWebView from '../../src/components/TajweedWebView';
 import TajweedGuide from '../../src/components/TajweedGuide';
-import { QURAN_FONTS } from '../../src/lib/quranFonts';
 import { useDownloads } from '../../src/store/DownloadsContext';
 
 // On native, colored tajweed runs break Arabic shaping in RN's text engine, so
@@ -145,8 +144,6 @@ export default function Reader() {
         showTafsir={showTafsir}
         isDark={theme.dark}
         scale={scale}
-        quranFontId={quranFontId}
-        onSelectFont={(id) => update({ quranFontId: id })}
         downloaded={isDownloaded(reciterId, surahNumber)}
         downloadProgress={progressFor(reciterId, surahNumber)}
         onToggleTajweed={() => update({ tajweed: !tajweed })}
@@ -236,9 +233,9 @@ export default function Reader() {
 // Left-side drawer with the reading options (replaces the crowded header buttons).
 function ReaderSettingsSheet({
   visible, onClose, c, insets,
-  tajweed, showTafsir, isDark, scale, quranFontId,
+  tajweed, showTafsir, isDark, scale,
   downloaded, downloadProgress,
-  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onSelectFont, onOpenGuide, onDownload, onRemoveDownload,
+  onToggleTajweed, onToggleTafsir, onToggleDark, onScale, onOpenGuide, onDownload, onRemoveDownload,
 }) {
   const downloading = downloadProgress != null;
   const W = Math.min(340, Dimensions.get('window').width * 0.84);
@@ -287,29 +284,6 @@ function ReaderSettingsSheet({
           </Pressable>
           <ToggleRow c={c} icon="document-text-outline" label="پیشاندانی تەفسیر" value={showTafsir} onToggle={onToggleTafsir} />
           <ToggleRow c={c} icon={isDark ? 'moon' : 'sunny-outline'} label="دۆخی تاریک" value={isDark} onToggle={onToggleDark} />
-
-          {/* Quran font picker */}
-          <View style={[styles.sheetRow, { borderColor: c.line, flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
-            <View style={styles.sheetRowLeft}>
-              <Ionicons name="reader-outline" size={20} color={c.accent} />
-              <Text style={[styles.sheetLabel, { color: c.ink }]}>فۆنتی قورئان</Text>
-            </View>
-            <View style={{ gap: 6 }}>
-              {QURAN_FONTS.map((f) => {
-                const on = quranFontId === f.id;
-                return (
-                  <Pressable
-                    key={f.id}
-                    onPress={() => onSelectFont(f.id)}
-                    style={[styles.fontOpt, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : 'transparent' }]}
-                  >
-                    <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={18} color={on ? c.accent : c.muted} />
-                    <Text style={{ color: c.ink, fontSize: 13, fontWeight: on ? '700' : '500', textAlign: 'right', flex: 1 }}>{f.name}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
 
           {/* Font size */}
           <View style={[styles.sheetRow, { borderColor: c.line }]}>

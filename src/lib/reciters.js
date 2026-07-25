@@ -1,5 +1,6 @@
 // Quran reciters. `url` streams the whole surah; `ayahFolder` (when present)
 // enables true per-ayah playback via everyayah.com (file NNNMMM.mp3).
+// `photo` is an optional remote portrait; the UI falls back to a monogram.
 const pad = (n) => String(n).padStart(3, '0');
 const EVERYAYAH = 'https://everyayah.com/data';
 
@@ -20,18 +21,25 @@ export const RECITERS = [
     ayahFolder: 'Ghamadi_40kbps',
   },
   {
-    id: 'alafasy',
-    name: 'مشاری العفاسی',
-    nameEn: 'Mishary Alafasy',
-    url: (s) => `https://server8.mp3quran.net/afs/${pad(s)}.mp3`,
-    ayahFolder: 'Alafasy_128kbps',
+    id: 'qatami',
+    name: 'ناصر القطامی',
+    nameEn: 'Nasser Al-Qatami',
+    url: (s) => `https://server6.mp3quran.net/qtm/${pad(s)}.mp3`,
+    ayahFolder: 'Nasser_Alqatami_128kbps',
   },
   {
-    id: 'sudais',
-    name: 'عبدالرحمن السدیس',
-    nameEn: 'Abdulrahman Al-Sudais',
-    url: (s) => `https://server11.mp3quran.net/sds/${pad(s)}.mp3`,
-    ayahFolder: 'Abdurrahmaan_As-Sudais_192kbps',
+    id: 'dosari',
+    name: 'یاسر الدوسری',
+    nameEn: 'Yasser Al-Dosari',
+    url: (s) => `https://server11.mp3quran.net/yasser/${pad(s)}.mp3`,
+    ayahFolder: 'Yasser_Ad-Dussary_128kbps',
+  },
+  {
+    id: 'ajmi',
+    name: 'احمد العجمی',
+    nameEn: 'Ahmad Al-Ajmi',
+    url: (s) => `https://server10.mp3quran.net/ajm/${pad(s)}.mp3`,
+    ayahFolder: 'Ahmed_ibn_Ali_al-Ajamy_128kbps',
   },
   {
     id: 'maher',

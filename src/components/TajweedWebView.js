@@ -148,15 +148,15 @@ function buildDocument({
     font-size: ${Math.round(22 * scale)}px; margin-bottom: 14px;
   }
   .card {
-    border: 1px solid ${c.line}; border-radius: 16px; padding: 16px;
-    margin-bottom: 12px; background: ${c.card}; position: relative;
+    border: 1px solid ${c.line}; border-radius: 14px; padding: 12px 13px 10px;
+    margin-bottom: 7px; background: ${c.card}; position: relative;
     transition: background .2s, border-color .2s;
   }
   .card.active { background: ${c.accentSoft}; border-color: ${c.accent}; }
-  .top { display: flex; justify-content: flex-start; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .top { display: flex; justify-content: flex-start; align-items: center; gap: 16px; margin-bottom: 4px; }
   .ic { display: inline-flex; cursor: pointer; }
   .ayah {
-    font-family: ${TEXT_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 2.15)}px;
+    font-family: ${TEXT_FONT}; font-size: ${fontSize}px; line-height: ${Math.round(fontSize * 1.95)}px;
     color: ${c.ink}; text-align: right; direction: rtl; word-spacing: 2px;
   }
   /* Ayah number: the Uthmani font draws the bare numeral inside its rosette. */
